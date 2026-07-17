@@ -363,7 +363,7 @@
 'use strict';
 /* ============ DATOS (editar SOLO esto en actualizaciones normales) ============ */
 const LAST_AUDIT = '2026-07-17';
-const CLOSED_COUNT = 2;
+const CLOSED_COUNT = 3;
 const REPO = 'https://github.com/hifede1/claude-doc-arquitecto';
 
 const DATA = [
@@ -376,16 +376,14 @@ const DATA = [
       pends: [] },
   ]},
   { zona: '/documentar', bloques: [
-    { id: 's02', nombre: 'S02 — Modo nuevo (entrevista + generación)', estado: 'curso', issue: 2,
-      plante: 'La mitad productiva del comando: entrevista guiada en 4 etapas y generación de docs/ con el contrato de formato del audit-tracker. Escrito y en PR #1 — pero escrito ≠ hecho: falta la corrida real del criterio 1.',
-      metodo: 'Firmar PR #1 (comentario «✅ validado») → mergear → actualizar la caché del plugin → repo de prueba VACÍO → corrida completa de la entrevista → inspección de la salida contra el criterio 1.',
-      resultados: ['docs/ completo generado en repo vacío (verificación: inspección del árbol).',
-        'Cada sesión del PLAN generado con ≥1 criterio verificable (verificación: lectura de PLAN.md).',
-        'Cero decisiones inventadas (verificación: transcript de la corrida).'],
+    { id: 's02', nombre: 'S02 — Modo nuevo (entrevista + generación)', estado: 'hecho', issue: 2,
+      plante: 'La mitad productiva del comando: entrevista guiada en 4 etapas y generación de docs/ con el contrato de formato del audit-tracker. VERIFICADA con corrida real (2026-07-17): criterio 1 de la FICHA clavado, escéptico independiente veredicto SOBREVIVE (issue #2).',
+      metodo: 'MODO MANTENIMIENTO: al tocar documentar.md, los formatos de la Fase 2 son el contrato con audit-tracker y con S03 — no se alteran sin re-verificar el criterio 1. Tras cada cambio: bump de versión + actualizar caché + REINICIAR la sesión (la caché nueva no aplica a sesiones abiertas).',
+      resultados: ['docs/ completo generado en repo vacío ✅ (verificado por escéptico, issue #2).',
+        'Cada sesión del PLAN con ≥1 criterio verificable ✅ (11 criterios, todos con método).',
+        'Cero decisiones inventadas ✅ (transcript: síntesis confirmadas + ADR pendiente con dueño).'],
       refs: [{ t: 'FICHA §3 y §6', freshref: 'ref-ficha' }],
-      pends: [
-        { id: 's02-corrida', txt: 'Corrida de verificación del criterio 1 en repo de prueba vacío', est: 0.3 },
-      ] },
+      pends: [] },
     { id: 's03', nombre: 'S03 — Modo existente (huecos + diffs)', estado: 'pendiente', issue: 3,
       plante: 'Hoy el comando frena honestamente ante un repo con docs o código. S03 le da la otra mitad: detectar huecos y completarlos SIN pisar nada — un documentador que pisa lo escrito destruye el contrato que debía cuidar.',
       metodo: 'Inventario de lo existente → huecos contra el contrato → entrevista SOLO de lo faltante → diff confirmado por archivo → idempotencia (re-corrida = cero escrituras). v0.3.0 + CHANGELOG.',
@@ -433,17 +431,13 @@ const DATA = [
 ];
 
 const DEBT = [
-  'Deuda de verificación: criterio 1 de la FICHA sin corrida real (pend s02-corrida). S02 puede estar «escrita» y romperse en la primera entrevista real.',
   'Repo privado: la instalación remota para terceros falla hasta S05 (decisión aceptada, no olvidada).',
   'CI sin checks de contenido de los comandos (solo estructura) — deuda menor aceptada para un repo de prompts.',
 ];
 
 const PLAN = [
-  { id: 'ps02', titulo: 'S02-cierre — Verificar /documentar modo nuevo', issue: 2, badge: 'directo',
-    prereq: 'PR #1 firmado y mergeado', bloque: 's02', next: true,
-    objetivo: 'Probar en un repo vacío real que la entrevista produce el contrato completo (criterio 1).' },
   { id: 'ps03', titulo: 'S03 — Modo existente: huecos, diffs, idempotencia', issue: 3, badge: 'directo',
-    prereq: '#2 (contrato de formatos probado)', bloque: 's03',
+    prereq: '#2 ✅ (contrato de formatos probado el 2026-07-17)', bloque: 's03', next: true,
     objetivo: 'Completar docs existentes sin pisar nada, con diff confirmado por archivo.' },
   { id: 'ps04', titulo: 'S04 — /auditar-docs: seis dimensiones', issue: 4, badge: 'SDD ligero /sdd-ff',
     prereq: '#2 (formato probado) · independiente de S03', bloque: 's04',
@@ -454,6 +448,7 @@ const PLAN = [
 ];
 
 const CHANGELOG = [
+  { fecha: '2026-07-17', txt: 'S02 HECHA y verificada: corrida real de /documentar en repo vacío (entrevista completa con Fede, generación de docs/, escéptico independiente SOBREVIVE, 3 hallazgos menores corregidos). Criterios C1 y C5 clavados. Issue #2 cerrado con informe; CLOSED_COUNT 2→3. Hallazgo nuevo: la caché actualizada no aplica a sesiones abiertas (reinicio requerido) — documentar en README (S05). Próxima: S03.' },
   { fecha: '2026-07-17', txt: 'Re-auditoría (loop /orquestar, encargo #2): PR #1 firmado por Fede (pedido explícito en sesión — procedencia en el comentario de firma) y mergeado con CI verde; caché del plugin actualizada a v0.2.0 y verificada en código. s02-firma y s02-cache → verde (CLOSED_COUNT 0→2). Queda s02-corrida: la corrida de verificación del criterio 1, en curso.' },
   { fecha: '2026-07-17', txt: 'Auditoría inicial y tracker v1. S01 verde (verificado). S02 en PR #1 esperando firma. Repo privado creado en GitHub, cola de despacho publicada (issues #2–#5), calibración: sesiones · 1 máquina · mixto SDD · loop orquestado · todo se firma.' },
 ];
@@ -515,17 +510,17 @@ const TESTS = {
   ],
   flows: [
     { f: 'Instalación: marketplace → caché → comando namespaceado aparece y ejecuta', pill: 'ambar', ev: 'Verificado A MANO hoy (corrida real en sesión); sin check automatizado' },
-    { f: '/documentar modo nuevo: detección → entrevista → docs/ generado', pill: 'rojo', ev: 'Sin corrida — es el pend s02-corrida (issue #2)' },
+    { f: '/documentar modo nuevo: detección → entrevista → docs/ generado', pill: 'verde', ev: 'Corrida real 2026-07-17 en repo vacío + escéptico independiente SOBREVIVE (informe en issue #2)' },
     { f: '/documentar modo existente: huecos → diffs → idempotencia', pill: 'rojo', ev: 'Futuro S03 (issue #3)' },
     { f: '/auditar-docs sobre docs con defectos sembrados', pill: 'rojo', ev: 'Futuro S04 (issue #4)' },
     { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'rojo', ev: 'Futuro S05 (issue #5)' },
   ],
   crit: [
-    { c: 'C1 — repo vacío → estructura completa, ≥1 criterio verificable por sesión', prot: 'Corrida protocolizada en repo de prueba (issue #2)', estado: 'deuda' },
+    { c: 'C1 — repo vacío → estructura completa, ≥1 criterio verificable por sesión', prot: 'Corrida protocolizada 2026-07-17 + escéptico (informe en issue #2)', estado: 'clavado' },
     { c: 'C2 — docs existentes: nada se pisa sin confirmación', prot: 'Corrida con docs sembrados + rechazo (S03)', estado: 'futuro' },
     { c: 'C3 — contradicción y criterio no verificable sembrados: detectados con ubicación', prot: 'Repo de prueba con defectos plantados (S04)', estado: 'futuro' },
     { c: 'C4 — audit-tracker consume la salida sin adaptación', prot: 'Corrida en secuencia (S05)', estado: 'futuro' },
-    { c: 'C5 — cero decisiones inventadas en la entrevista', prot: 'Revisión de transcript (S02-cierre y S05)', estado: 'deuda' },
+    { c: 'C5 — cero decisiones inventadas en la entrevista', prot: 'Transcript de la corrida del 2026-07-17 (issue #2); se re-confirma en S05', estado: 'clavado' },
   ],
 };
 
@@ -625,8 +620,8 @@ function renderPlan() {
 function renderMapa() {
   const nodes = [
     { id: null, nm: 'FICHA firmada', d: 'contrato de diseño', arrow: 'S01 construye', who: 'auto' },
-    { id: 's01', nm: 'S01 Esqueleto', d: 'instalable', arrow: 'PR #1 espera firma', who: 'humano' },
-    { id: 's02', nm: 'S02 Modo nuevo', d: 'en validación', arrow: '/orquestar toma #3', who: 'auto' },
+    { id: 's01', nm: 'S01 Esqueleto', d: 'instalable', arrow: 'PR #1 firmado y mergeado', who: 'humano' },
+    { id: 's02', nm: 'S02 Modo nuevo', d: 'verificada (issue #2)', arrow: '/orquestar toma #3', who: 'auto' },
     { id: 's03', nm: 'S03 Modo existente', d: 'pendiente', arrow: '/orquestar toma #4', who: 'auto' },
     { id: 's04', nm: 'S04 /auditar-docs', d: 'SDD ligero', arrow: 'firma de Fede en cada PR', who: 'humano' },
     { id: 's05', nm: 'S05 Cierre', d: 'e2e + público', arrow: 'tag', who: 'humano' },
@@ -680,8 +675,8 @@ function renderTests() {
     (f.pill === 'verde' ? '🟢 clavado' : f.pill === 'ambar' ? '🟠 solo manual' : '🔴 sin verificar') + '</span> ' + f.ev + '</td></tr>').join('');
   $('#crit').innerHTML = '<tr><th>Criterio (FICHA §6)</th><th>Qué lo protege</th><th>Estado</th></tr>' +
     TESTS.crit.map(c => '<tr><td>' + c.c + '</td><td>' + c.prot + '</td>' +
-    '<td><span class="pill ' + (c.estado === 'deuda' ? 'ambar' : 'pendiente') + '">' +
-    (c.estado === 'deuda' ? '🟠 deuda de verificación' : '⚪ futuro') + '</span></td></tr>').join('');
+    '<td><span class="pill ' + (c.estado === 'clavado' ? 'verde' : c.estado === 'deuda' ? 'ambar' : 'pendiente') + '">' +
+    (c.estado === 'clavado' ? '🟢 clavado' : c.estado === 'deuda' ? '🟠 deuda de verificación' : '⚪ futuro') + '</span></td></tr>').join('');
 }
 
 let rFilter = 'todas';
