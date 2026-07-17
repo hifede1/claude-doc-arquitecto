@@ -440,8 +440,8 @@ const PLAN = [
 ];
 
 const CHANGELOG = [
-  { fecha: '2026-07-17', txt: '🎉 RELEASE v1.0.0 — plugin COMPLETO. PR #12 (S05) mergeado, release v1.0.0 (PR #14) mergeado, repo PÚBLICO, tag v1.0.0. Instalación remota verificada (HTTP 200). ADR 006 resuelto por Fede (público + v1.0.0). CLOSED_COUNT 9→11. Las 5 sesiones del plan hechas y verificadas. Gotcha del cierre: el PR #12 mergeó en a9db016 antes de que el bump a 1.0.0 propagara → el bump quedó varado y se llevó a main por PR #14 (cherry-pick); lección: verificar el SHA del CI, no confiar en un check stale.' },
-  { fecha: '2026-07-17', txt: 'S05 implementada vía /proximo-encargo con verificación por workflow adversarial (6 agentes, 255k tokens). El e2e REFUTÓ el criterio 4: /documentar no exponía triggers en el catálogo de referencias ni catalogaba business/ → audit-tracker no podía consumir sin adaptación manual. Arreglado en la Fase 2 del comando (catálogo cubre references/ + business/ con todos los campos) y re-verificado. Criterio 4 y 5 clavados (CLOSED_COUNT 7→9). PR #12 con CI verde ESPERANDO FIRMA. Pendiente último: ADR 006 (repo público + v1.0.0), decisión de Fede. Hallazgo para Fede: contradicción de alcance sobre CI en los docs de prueba, cazada por /auditar-docs sola.' },
+  { fecha: '2026-07-17', txt: '🎉 RELEASE v1.0.0 — plugin COMPLETO. PR #12 (S05) mergeado, release v1.0.0 (PR #14) mergeado, repo PÚBLICO, tag v1.0.0. Instalación remota verificada (HTTP 200). Decisión de publicación (d08) resuelta por Fede (público + v1.0.0). CLOSED_COUNT 9→11. Las 5 sesiones del plan hechas y verificadas. Gotcha del cierre: el PR #12 mergeó en a9db016 antes de que el bump a 1.0.0 propagara → el bump quedó varado y se llevó a main por PR #14 (cherry-pick); lección: verificar el SHA del CI, no confiar en un check stale.' },
+  { fecha: '2026-07-17', txt: 'S05 implementada vía /proximo-encargo con verificación por workflow adversarial (6 agentes, 255k tokens). El e2e REFUTÓ el criterio 4: /documentar no exponía triggers en el catálogo de referencias ni catalogaba business/ → audit-tracker no podía consumir sin adaptación manual. Arreglado en la Fase 2 del comando (catálogo cubre references/ + business/ con todos los campos) y re-verificado. Criterio 4 y 5 clavados (CLOSED_COUNT 7→9). PR #12 con CI verde ESPERANDO FIRMA. Pendiente último: la publicación (repo público + v1.0.0), decisión de Fede. Hallazgo para Fede: contradicción de alcance sobre CI en los docs de prueba, cazada por /auditar-docs sola.' },
   { fecha: '2026-07-17', txt: 'S03 mergeada (PR #9 firmado por Fede) — sus 4 pends de implementación a verde (CLOSED_COUNT 3→7); queda s03-corrida (criterio 2, rechazo humano). S04 implementada vía /proximo-encargo: corrida CIEGA verificó el criterio 3 (ambos defectos sembrados detectados con file:línea); PR #10 con CI verde y conflicto de versión resuelto (0.4.0), ESPERANDO FIRMA. Gotcha registrado: otra sesión cambia la cuenta gh activa — switchear en la misma cadena que el push.' },
   { fecha: '2026-07-17', txt: 'S02 HECHA y verificada: corrida real de /documentar en repo vacío (entrevista completa con Fede, generación de docs/, escéptico independiente SOBREVIVE, 3 hallazgos menores corregidos). Criterios C1 y C5 clavados. Issue #2 cerrado con informe; CLOSED_COUNT 2→3. Hallazgo nuevo: la caché actualizada no aplica a sesiones abiertas (reinicio requerido) — documentar en README (S05). Próxima: S03.' },
   { fecha: '2026-07-17', txt: 'Re-auditoría (loop /orquestar, encargo #2): PR #1 firmado por Fede (pedido explícito en sesión — procedencia en el comentario de firma) y mergeado con CI verde; caché del plugin actualizada a v0.2.0 y verificada en código. s02-firma y s02-cache → verde (CLOSED_COUNT 0→2). Queda s02-corrida: la corrida de verificación del criterio 1, en curso.' },
@@ -492,16 +492,16 @@ const DECISIONS = [
     porque: 'Habilita issues y PRs hoy sin publicar un plugin a medio construir. Decidido por Fede en la calibración.',
     consecuencias: 'La instalación remota de terceros falla hasta S05 — listado como deuda visible.', superaA: null },
   { id: 'd08', fecha: '2026-07-17', titulo: 'Publicación: repo público + tag v1.0.0', estado: 'aceptada',
-    contexto: 'ADR 006 (pendiente): cuándo pasar el repo a público. Se desbloqueaba al llegar a S05 con el pipeline e2e verde.',
+    contexto: 'La decisión de publicación pendiente: cuándo pasar el repo a público. Se desbloqueaba al llegar a S05 con el pipeline e2e verde.',
     opciones: 'Público ahora + tag v1.0.0 · público sin tag (queda en 0.5.0) · seguir privado por ahora.',
     decision: 'Público ahora + tag v1.0.0.',
-    porque: 'El e2e quedó verde (condición del ADR 006) y las 5 sesiones verificadas. Decidido por Fede vía AskUserQuestion + «firmalo por mí».',
+    porque: 'El e2e quedó verde (la condición que desbloqueaba la publicación) y las 5 sesiones verificadas. Decidido por Fede vía AskUserQuestion + «firmalo por mí».',
     consecuencias: 'Instalación remota de terceros habilitada (verificada HTTP 200). El plugin queda en v1.0.0.',
     superaA: 'Repo privado hasta S05 (el pase a público era un pend de S05; ahora ejecutado)' },
 ];
 
 const DECISION_PENDS = [
-  // s05-publico RESUELTO (ADR 006 → d08: público + v1.0.0). El pend se cerró; su ficha derivada desaparece sola.
+  // s05-publico RESUELTO (d08: público + v1.0.0). El pend se cerró; su ficha derivada desaparece sola.
 ];
 
 const TESTS = {
@@ -626,7 +626,7 @@ function renderMapa() {
     { id: 's02', nm: 'S02 Modo nuevo', d: 'verificada (issue #2)', arrow: '/orquestar toma #3', who: 'auto' },
     { id: 's03', nm: 'S03 Modo existente', d: 'mergeada · corrida pendiente', arrow: 'ejecutor tomó #4', who: 'auto' },
     { id: 's04', nm: 'S04 /auditar-docs', d: 'PR #10 espera firma', arrow: 'firma de Fede', who: 'humano' },
-    { id: 's05', nm: 'S05 Cierre', d: 'e2e verde · PR #12', arrow: 'firma + decisión ADR 006', who: 'humano' },
+    { id: 's05', nm: 'S05 Cierre', d: 'e2e verde · PR #12', arrow: 'firma + decisión de publicación (d08)', who: 'humano' },
     { id: null, nm: 'v1.0.0 🎉', d: 'plugin publicado · repo público', arrow: null },
   ];
   $('#mapflow').innerHTML = nodes.map(n => {
