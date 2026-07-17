@@ -62,6 +62,7 @@ docs/
 | Generación | Entrevista guiada al humano | Generación automática leyendo solo el código | Lo estructural lo decide el humano; docs inventados por la máquina son el problema, no la solución. |
 | Fuente de verdad | Markdown en el repo (git) | Artifact HTML, wiki externa | Los docs viajan con el código y se versionan; el HTML vistoso ya lo pone el tracker del audit-tracker. |
 | Re-ejecución | Idempotente con modo actualización y diffs confirmados | Regenerar desde cero cada vez | Un documentador que pisa lo escrito destruye el contrato que debía cuidar. |
+| Licencia y modelo | MIT · open source · sin monetización (ver `LICENSE`) | Licencia propietaria; otra OSS (Apache-2.0, GPL) | MIT es la más permisiva y estándar para tooling de desarrollo; sin fricción para colaboradores ni terceros; coherente con herramienta interna sin monetización. Decidido por Fede. |
 
 ## 5. Fuera de alcance (v1)
 
@@ -73,11 +74,11 @@ docs/
 
 ## 6. Criterios de aceptación
 
-- [ ] `/documentar` en un repo sin docs produce la estructura completa, y **cada sesión del plan tiene ≥1 criterio de aceptación verificable** (verificación: inspección de la salida en un repo de prueba vacío).
-- [ ] `/documentar` en un proyecto con docs existentes **no pisa nada sin confirmación**: propone diffs y pregunta (verificación: correr sobre repo con docs sembrados y verificar que el contenido original sobrevive a un rechazo).
-- [ ] `/auditar-docs` detecta y reporta con ubicación una **contradicción sembrada** entre dos documentos y un **criterio no verificable** sembrado (verificación: repo de prueba con ambos defectos plantados).
-- [ ] **Pipeline end-to-end:** sobre los docs generados, `/audit-tracker` corre y los consume **sin adaptación manual** (verificación: correr ambos en secuencia en el repo de prueba).
-- [ ] Las decisiones estructurales de la entrevista se le preguntan al humano **con opciones y tradeoffs** — cero decisiones de negocio inventadas (verificación: revisión del transcript de una corrida de `/documentar`).
+- [x] `/documentar` en un repo sin docs produce la estructura completa, y **cada sesión del plan tiene ≥1 criterio de aceptación verificable** (verificación: inspección de la salida en un repo de prueba vacío). ✅ **S02** — corrida en repo vacío + escéptico independiente SOBREVIVE.
+- [x] `/documentar` en un proyecto con docs existentes **no pisa nada sin confirmación**: propone diffs y pregunta (verificación: correr sobre repo con docs sembrados y verificar que el contenido original sobrevive a un rechazo). ✅ **S03** (implementación + 3 rondas de escéptico) + demostrado en la corrida de modo existente sobre el propio repo (solo adiciones, nada pisado).
+- [x] `/auditar-docs` detecta y reporta con ubicación una **contradicción sembrada** entre dos documentos y un **criterio no verificable** sembrado (verificación: repo de prueba con ambos defectos plantados). ✅ **S04** — corrida ciega detectó ambos defectos con `file:línea` exactos.
+- [x] **Pipeline end-to-end:** sobre los docs generados, `/audit-tracker` corre y los consume **sin adaptación manual** (verificación: correr ambos en secuencia en el repo de prueba). ✅ **S05** — workflow adversarial: refutado (gap de referencias) → arreglado en la fuente → re-verificado sin adaptación.
+- [x] Las decisiones estructurales de la entrevista se le preguntan al humano **con opciones y tradeoffs** — cero decisiones de negocio inventadas (verificación: revisión del transcript de una corrida de `/documentar`). ✅ **S05** — los 6 ADRs mapean a la FICHA firmada o son pendientes con dueño; cero inventadas.
 
 ## 7. Plan de construcción
 
@@ -90,5 +91,5 @@ docs/
 ## 8. Referencias
 
 - `~/Developer/tools/claude-audit-tracker` — estructura de plugin, marketplace, formato de fichas/encargos que esta herramienta debe producir, y la regla de caza de decisiones de `/orquestar`.
-- `fichas/PLANTILLA.md` — esta ficha sigue la plantilla del taller.
+- `fichas/PLANTILLA.md` (plantilla externa del taller, no versionada en este repo) — esta ficha sigue su formato.
 - README del audit-tracker, sección catálogo de referencias — define `docs/references/` y `docs/business/` con frescura fechada.
