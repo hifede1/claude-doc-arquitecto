@@ -1,7 +1,7 @@
 # Ficha de diseño: doc-arquitecto
 
-> Estado: 🟠 En construcción (firmada por Fede el 2026-07-17)
-> Diseñada: 2026-07-17 · S01 ✅ · S02 en validación · Próxima sesión de construcción: S03 — modo existente
+> Estado: ✅ v1.0.0 — completado y publicado (firmada por Fede el 2026-07-17)
+> Diseñada: 2026-07-17 · S01–S05 ✅ completas y verificadas · repo público, tag v1.0.0
 
 ## 1. Propósito
 
