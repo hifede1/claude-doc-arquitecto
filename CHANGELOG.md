@@ -2,6 +2,9 @@
 
 Formato: una entrada por versión del plugin. El detalle fino vive en los mensajes de commit.
 
+## v0.4.0 — 2026-07-17
+- **S04 — `/auditar-docs`**: las seis dimensiones de auditoría (completitud, contradicciones, criterios no verificables, decisiones sin registrar, referencias faltantes/vencidas, drift doc↔doc) con heurísticas operativas embebidas, severidades 🔴🟠🟡⚪, informe por dimensión con `file:línea` (dimensión limpia se declara), y arreglos uno por uno con diff confirmado — los que implicarían inventar se marcan «requiere decisión humana» y se preguntan con opciones y tradeoffs. Diseño fijado en `docs/references/auditoria-de-docs.md` (nueva, con triggers y fecha). Nota: rama independiente de S03 — versionada como 0.4.0 asumiendo el merge previo o simultáneo de la 0.3.0.
+
 ## v0.2.0 — 2026-07-17
 - **S02 — `/documentar` modo nuevo**: entrevista guiada por etapas (propósito → alcance → caza de decisiones estructurales con opciones y tradeoffs → plan de sesiones) y generación de la estructura completa de `docs/` (VISION, ALCANCE, PLAN con fichas 🎯🛠️✅📚⛓️, decisiones/ como ADRs con pendientes explícitas, references/ con catálogo de faltantes, business/). Detección de modo en Fase 0: con docs y/o código existente declara que el modo existente llega en S03 y frena — no improvisa. Cero archivos antes de que el humano confirme el plan; cada sesión con ≥1 criterio verificable.
 
