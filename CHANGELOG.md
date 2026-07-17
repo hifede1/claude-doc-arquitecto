@@ -2,6 +2,9 @@
 
 Formato: una entrada por versión del plugin. El detalle fino vive en los mensajes de commit.
 
+## v0.5.0 — 2026-07-17
+- **S05 — Integración y cierre (pipeline e2e)**: la verificación adversarial del criterio 4 (audit-tracker consume la salida sin adaptación manual) encontró dos gaps bloqueantes en la Fase 2 de `/documentar` — el catálogo de `references/` no exponía los `triggers` y `business/` no se cataloga ni llevaba frontmatter machine-readable. **Arreglado en la fuente**: el catálogo ahora cubre AMBAS mitades (references/ = CÓMO, business/ = QUÉ) con todos los campos que el tracker consume (tema · qué resuelve · fecha · triggers con valores · quién la usa · frescura pill 🟢🟠🔴 · path), y `business/` lleva frontmatter `tema`/`fecha`/`triggers`/`resumen`. Re-verificado: pipeline sin traducción confirmado. README final. La publicación (repo público + tag v1.0.0) es el ADR 006 pendiente — decisión de Fede.
+
 ## v0.4.0 — 2026-07-17
 - **S04 — `/auditar-docs`**: las seis dimensiones de auditoría (completitud, contradicciones, criterios no verificables, decisiones sin registrar, referencias faltantes/vencidas, drift doc↔doc) con heurísticas operativas embebidas, severidades 🔴🟠🟡⚪, informe por dimensión con `file:línea` (dimensión limpia se declara), y arreglos uno por uno con diff confirmado — los que implicarían inventar se marcan «requiere decisión humana» y se preguntan con opciones y tradeoffs. Diseño fijado en `docs/references/auditoria-de-docs.md` (nueva, con triggers y fecha).
 

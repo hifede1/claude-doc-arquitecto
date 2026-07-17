@@ -1,7 +1,7 @@
 {
   "name": "doc-arquitecto",
   "description": "Produce y audita la documentación de un proyecto para que sea un contrato completo, coherente y verificable — el plano que el audit-tracker necesita para auditar la obra. /documentar: entrevista guiada (modo nuevo) o completado de huecos con diffs confirmados (modo existente). /auditar-docs: audita el plano mismo — completitud, contradicciones, criterios no verificables, decisiones sin registrar, referencias vencidas y drift doc↔doc.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": {
     "name": "Federico Pernice"
   },
