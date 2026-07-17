@@ -225,7 +225,7 @@
       <span class="cchip">metodología: mixta SDD</span>
       <span class="cchip">loop: orquestado (/orquestar)</span>
       <span class="cchip">firma: todo se firma</span>
-      <span class="cchip">cola: issues #2–#5 (repo privado)</span>
+      <span class="cchip">🎉 release v1.0.0 · repo público · issues #2–#5 cerrados</span>
     </div>
     <div class="meterrow">
       <div class="meter" role="meter" aria-label="Progreso del plan"><i id="meterfill"></i></div>
@@ -363,7 +363,7 @@
 'use strict';
 /* ============ DATOS (editar SOLO esto en actualizaciones normales) ============ */
 const LAST_AUDIT = '2026-07-17';
-const CLOSED_COUNT = 9;
+const CLOSED_COUNT = 11;
 const REPO = 'https://github.com/hifede1/claude-doc-arquitecto';
 
 const DATA = [
@@ -411,17 +411,14 @@ const DATA = [
       ] },
   ]},
   { zona: 'Integración y cierre', bloques: [
-    { id: 's05', nombre: 'S05 — Pipeline e2e + publicación', estado: 'curso', issue: 5,
-      plante: 'IMPLEMENTADA, en PR #12 (CI verde) esperando firma. El e2e adversarial (workflow de 6 agentes) refutó el criterio 4: /documentar no exponía triggers en el catálogo ni catalogaba business/ → audit-tracker no podía consumir sin adaptación. ARREGLADO en la fuente y re-verificado (sinAdaptacionManual=true). Criterio 5 ✅ (6 ADRs pasan). Queda la decisión de publicación (ADR 006, dueño Fede).',
-      metodo: 'Al firmar #12: merge → re-auditoría (C4 y C5 a verde). Publicación (repo público + tag v1.0.0 + instalación remota en máquina limpia) es el ADR 006 — decisión de Fede, se ejecuta cuando él la tome.',
-      resultados: ['/audit-tracker consume los docs generados sin adaptación manual ✅ (verificado por workflow adversarial + re-verificación tras el arreglo del gap de referencias).',
+    { id: 's05', nombre: 'S05 — Pipeline e2e + publicación', estado: 'hecho', issue: 5,
+      plante: 'HECHA. El e2e adversarial (workflow de 6 agentes) refutó el criterio 4 y encontró un gap REAL: /documentar no exponía triggers en el catálogo ni catalogaba business/ → audit-tracker no podía consumir sin adaptación. Arreglado en la fuente y re-verificado. PR #12 mergeado (S05 completa), release v1.0.0 mergeado (PR #14), repo PÚBLICO, tag v1.0.0. El plugin quedó COMPLETO.',
+      metodo: 'MODO MANTENIMIENTO: el formato del catálogo de references/+business/ es el contrato con la pestaña Referencias del audit-tracker — no se toca sin re-verificar el criterio 4. Cualquier release futuro: bump de plugin.json + tag + CI verde sobre el HEAD real (lección: verificar el SHA, no confiar en un check stale).',
+      resultados: ['/audit-tracker consume los docs generados sin adaptación manual ✅ (workflow adversarial: refutado → arreglado → re-verificado sinAdaptacionManual=true).',
         'Cero decisiones inventadas ✅ (los 6 ADRs mapean a la FICHA firmada o son pendientes con dueño).',
-        'Instalación remota funciona desde GitHub (verificación: máquina limpia — bloqueado hasta ADR 006).'],
+        'Instalación remota funciona desde GitHub ✅ (repo público; plugin.json responde HTTP 200 sin auth — el mecanismo de marketplace add).'],
       refs: [{ t: 'FICHA §6 (criterios 4 y 5)', freshref: 'ref-ficha' }],
-      pends: [
-        { id: 's05-publico', txt: 'DECISIÓN DE FEDE (ADR 006): pasar el repo a público + tag v1.0.0', est: 0.2 },
-        { id: 's05-instal', txt: 'Instalación remota verificada en máquina limpia (tras el pase a público)', est: 0.2 },
-      ] },
+      pends: [] },
   ]},
 ];
 
@@ -443,6 +440,7 @@ const PLAN = [
 ];
 
 const CHANGELOG = [
+  { fecha: '2026-07-17', txt: '🎉 RELEASE v1.0.0 — plugin COMPLETO. PR #12 (S05) mergeado, release v1.0.0 (PR #14) mergeado, repo PÚBLICO, tag v1.0.0. Instalación remota verificada (HTTP 200). ADR 006 resuelto por Fede (público + v1.0.0). CLOSED_COUNT 9→11. Las 5 sesiones del plan hechas y verificadas. Gotcha del cierre: el PR #12 mergeó en a9db016 antes de que el bump a 1.0.0 propagara → el bump quedó varado y se llevó a main por PR #14 (cherry-pick); lección: verificar el SHA del CI, no confiar en un check stale.' },
   { fecha: '2026-07-17', txt: 'S05 implementada vía /proximo-encargo con verificación por workflow adversarial (6 agentes, 255k tokens). El e2e REFUTÓ el criterio 4: /documentar no exponía triggers en el catálogo de referencias ni catalogaba business/ → audit-tracker no podía consumir sin adaptación manual. Arreglado en la Fase 2 del comando (catálogo cubre references/ + business/ con todos los campos) y re-verificado. Criterio 4 y 5 clavados (CLOSED_COUNT 7→9). PR #12 con CI verde ESPERANDO FIRMA. Pendiente último: ADR 006 (repo público + v1.0.0), decisión de Fede. Hallazgo para Fede: contradicción de alcance sobre CI en los docs de prueba, cazada por /auditar-docs sola.' },
   { fecha: '2026-07-17', txt: 'S03 mergeada (PR #9 firmado por Fede) — sus 4 pends de implementación a verde (CLOSED_COUNT 3→7); queda s03-corrida (criterio 2, rechazo humano). S04 implementada vía /proximo-encargo: corrida CIEGA verificó el criterio 3 (ambos defectos sembrados detectados con file:línea); PR #10 con CI verde y conflicto de versión resuelto (0.4.0), ESPERANDO FIRMA. Gotcha registrado: otra sesión cambia la cuenta gh activa — switchear en la misma cadena que el push.' },
   { fecha: '2026-07-17', txt: 'S02 HECHA y verificada: corrida real de /documentar en repo vacío (entrevista completa con Fede, generación de docs/, escéptico independiente SOBREVIVE, 3 hallazgos menores corregidos). Criterios C1 y C5 clavados. Issue #2 cerrado con informe; CLOSED_COUNT 2→3. Hallazgo nuevo: la caché actualizada no aplica a sesiones abiertas (reinicio requerido) — documentar en README (S05). Próxima: S03.' },
@@ -493,10 +491,17 @@ const DECISIONS = [
     decision: 'Privado ahora; el pase a público es un pend de S05.',
     porque: 'Habilita issues y PRs hoy sin publicar un plugin a medio construir. Decidido por Fede en la calibración.',
     consecuencias: 'La instalación remota de terceros falla hasta S05 — listado como deuda visible.', superaA: null },
+  { id: 'd08', fecha: '2026-07-17', titulo: 'Publicación: repo público + tag v1.0.0', estado: 'aceptada',
+    contexto: 'ADR 006 (pendiente): cuándo pasar el repo a público. Se desbloqueaba al llegar a S05 con el pipeline e2e verde.',
+    opciones: 'Público ahora + tag v1.0.0 · público sin tag (queda en 0.5.0) · seguir privado por ahora.',
+    decision: 'Público ahora + tag v1.0.0.',
+    porque: 'El e2e quedó verde (condición del ADR 006) y las 5 sesiones verificadas. Decidido por Fede vía AskUserQuestion + «firmalo por mí».',
+    consecuencias: 'Instalación remota de terceros habilitada (verificada HTTP 200). El plugin queda en v1.0.0.',
+    superaA: 'Repo privado hasta S05 (el pase a público era un pend de S05; ahora ejecutado)' },
 ];
 
 const DECISION_PENDS = [
-  { pendId: 's05-publico', note: 'La fecha del pase a público la decide Fede al llegar a S05 — hasta entonces, terceros no pueden instalar el plugin por remote.' },
+  // s05-publico RESUELTO (ADR 006 → d08: público + v1.0.0). El pend se cerró; su ficha derivada desaparece sola.
 ];
 
 const TESTS = {
@@ -510,7 +515,7 @@ const TESTS = {
     { f: '/documentar modo nuevo: detección → entrevista → docs/ generado', pill: 'verde', ev: 'Corrida real 2026-07-17 en repo vacío + escéptico independiente SOBREVIVE (informe en issue #2)' },
     { f: '/documentar modo existente: huecos → diffs → idempotencia', pill: 'ambar', ev: 'Implementación mergeada (PR #9) y verificada por escéptico en 3 rondas; corrida real del criterio 2 pendiente (el rechazo es humano)' },
     { f: '/auditar-docs sobre docs con defectos sembrados', pill: 'ambar', ev: 'Corrida CIEGA detectó ambos defectos con file:línea (informe en PR #10) — verde al mergear' },
-    { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'ambar', ev: 'Verificado por workflow adversarial en S05 (criterio 4): refutado → gap de referencias arreglado en la fuente → re-verificado limpio. Verde al mergear PR #12' },
+    { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'verde', ev: 'Verificado por workflow adversarial en S05 (criterio 4): refutado → gap de referencias arreglado en la fuente → re-verificado limpio. Mergeado (PR #12) + release v1.0.0' },
   ],
   crit: [
     { c: 'C1 — repo vacío → estructura completa, ≥1 criterio verificable por sesión', prot: 'Corrida protocolizada 2026-07-17 + escéptico (informe en issue #2)', estado: 'clavado' },
@@ -622,7 +627,7 @@ function renderMapa() {
     { id: 's03', nm: 'S03 Modo existente', d: 'mergeada · corrida pendiente', arrow: 'ejecutor tomó #4', who: 'auto' },
     { id: 's04', nm: 'S04 /auditar-docs', d: 'PR #10 espera firma', arrow: 'firma de Fede', who: 'humano' },
     { id: 's05', nm: 'S05 Cierre', d: 'e2e verde · PR #12', arrow: 'firma + decisión ADR 006', who: 'humano' },
-    { id: null, nm: 'v1.0.0', d: 'plugin publicado', arrow: null },
+    { id: null, nm: 'v1.0.0 🎉', d: 'plugin publicado · repo público', arrow: null },
   ];
   $('#mapflow').innerHTML = nodes.map(n => {
     const b = n.id ? bloques.find(x => x.id === n.id) : null;
