@@ -1,0 +1,772 @@
+<!--
+  TRACKER VIVO — claude-doc-arquitecto
+  URL del artifact: https://claude.ai/code/artifact/25f327de-9f3d-42a1-b2b0-c8077c1673bf
+  (redeploy SIEMPRE a esta misma URL — parámetro `url` del tool Artifact; URL nueva = tracker roto)
+
+  PROTOCOLO DE ACTUALIZACIÓN (para cualquier sesión futura):
+  1. Los datos viven en las constantes JS del bloque de script (LAST_AUDIT, DATA — con la estimación
+     de cada pend en su campo `est` —, DEBT, PLAN, CHANGELOG, CLOSED_COUNT, DECISIONS, DECISION_PENDS,
+     TESTS, REFS). La lógica de render NO se toca en actualizaciones normales.
+  2. Re-auditoría: re-verificar EN CÓDIGO los ticks ámbar (jamás confiar en el tick), borrar de
+     DATA/DEBT/EST/PLAN los confirmados, sumar su número a CLOSED_COUNT, recalcular estados de bloque,
+     entrada fechada en CHANGELOG, actualizar TESTS/REFS si corresponde.
+  3. Los IDs de pends son ESTABLES: jamás renombrarlos (los ticks del navegador dependen de ellos).
+  4. Validar el JS con node antes de CADA deploy. Redeploy a LA MISMA URL. Commit en rama + PR
+     (bookkeeping de cierres ya firmados: automergeable en modo orquestado).
+  5. Calibración vigente: unidad = sesiones (~2-4h) · 1 máquina (Fede + Claude) · metodología mixta
+     con SDD (S04 = SDD ligero /sdd-ff; resto directo) · loop ORQUESTADO (/orquestar) con modo
+     despacho activo (cola = GitHub Issues) · umbral de firma: NADA automergea, todo se firma.
+  6. La cola de trabajo vive en GitHub (hifede1/claude-doc-arquitecto, privado): issues #2–#5,
+     PRs = canal de firma (misma cuenta → firma = comentario «✅ validado»).
+-->
+<title>Tracker — doc-arquitecto</title>
+<style>
+  :root {
+    --bg: #F5F7FA; --surface: #FFFFFF; --surface2: #EDF1F6;
+    --ink: #1B2733; --muted: #5B6B7C; --border: #D9E1EA;
+    --accent: #2F6DAE; --accent-soft: #E3EDF7;
+    --ok: #2E7D4F; --ok-soft: #E2F0E8; --warn: #B07A14; --warn-soft: #F7EDD8;
+    --bad: #B3552E; --bad-soft: #F6E4DB; --pend-soft: #E7ECF1;
+    --amber-tick: #B07A14;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F151C; --surface: #161F29; --surface2: #1D2833;
+      --ink: #E6EDF3; --muted: #93A4B5; --border: #263442;
+      --accent: #6EA8DC; --accent-soft: #1B2C3F;
+      --ok: #58B37F; --ok-soft: #17301F; --warn: #D9A441; --warn-soft: #33270E;
+      --bad: #D97E57; --bad-soft: #33190E; --pend-soft: #202B36;
+      --amber-tick: #D9A441;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F151C; --surface: #161F29; --surface2: #1D2833;
+    --ink: #E6EDF3; --muted: #93A4B5; --border: #263442;
+    --accent: #6EA8DC; --accent-soft: #1B2C3F;
+    --ok: #58B37F; --ok-soft: #17301F; --warn: #D9A441; --warn-soft: #33270E;
+    --bad: #D97E57; --bad-soft: #33190E; --pend-soft: #202B36;
+    --amber-tick: #D9A441;
+  }
+  :root[data-theme="light"] {
+    --bg: #F5F7FA; --surface: #FFFFFF; --surface2: #EDF1F6;
+    --ink: #1B2733; --muted: #5B6B7C; --border: #D9E1EA;
+    --accent: #2F6DAE; --accent-soft: #E3EDF7;
+    --ok: #2E7D4F; --ok-soft: #E2F0E8; --warn: #B07A14; --warn-soft: #F7EDD8;
+    --bad: #B3552E; --bad-soft: #F6E4DB; --pend-soft: #E7ECF1;
+    --amber-tick: #B07A14;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+  a { color: var(--accent); }
+  header.top { border-bottom: 2px solid var(--accent); background: var(--surface);
+    padding: 18px 0 14px; margin-bottom: 0; }
+  header.top .wrap { padding-bottom: 0; display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -.01em; }
+  h1 .mono { color: var(--accent); }
+  .calib { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cchip { font-family: ui-monospace, Menlo, monospace; font-size: 11px; padding: 3px 9px;
+    border: 1px solid var(--border); border-radius: 999px; background: var(--surface2); color: var(--muted); }
+  .meterrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-variant-numeric: tabular-nums; }
+  .meter { flex: 1 1 240px; height: 8px; border-radius: 4px; background: var(--surface2);
+    overflow: hidden; border: 1px solid var(--border); }
+  .meter > i { display: block; height: 100%; background: var(--accent); border-radius: 4px 0 0 4px; }
+  .meterlab { font-size: 13px; color: var(--muted); }
+  .meterlab b { color: var(--ink); }
+  nav.tabs { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    border-bottom: 1px solid var(--border); margin-bottom: 26px; }
+  nav.tabs .wrap { display: flex; gap: 2px; overflow-x: auto; padding-top: 8px; padding-bottom: 0; }
+  nav.tabs button { appearance: none; border: 1px solid transparent; border-bottom: none;
+    background: none; color: var(--muted); font: 600 13px/1 system-ui, sans-serif;
+    padding: 10px 14px; border-radius: 8px 8px 0 0; cursor: pointer; white-space: nowrap; }
+  nav.tabs button:hover { color: var(--ink); }
+  nav.tabs button:focus-visible, .copybtn:focus-visible, .chip:focus-visible,
+  .dchip:focus-visible, .tchip:focus-visible, .rchip:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; }
+  nav.tabs button[aria-selected="true"] { color: var(--accent); background: var(--surface);
+    border-color: var(--border); border-bottom: 2px solid var(--surface); margin-bottom: -1px; }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  h2 { font-size: 17px; margin: 0 0 4px; }
+  .lede { color: var(--muted); font-size: 13.5px; margin: 0 0 18px; max-width: 68ch; }
+  .zone { margin-bottom: 26px; }
+  .zone > h3 { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  details.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  details.card[open] { grid-column: 1 / -1; }
+  details.card > summary { list-style: none; cursor: pointer; padding: 13px 15px;
+    display: flex; flex-direction: column; gap: 7px; }
+  details.card > summary::-webkit-details-marker { display: none; }
+  .cardtop { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .cardtitle { font-weight: 650; font-size: 14.5px; }
+  .cardmeta { display: flex; gap: 10px; font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+  .pill { font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill.hecho { background: var(--ok-soft); color: var(--ok); }
+  .pill.curso { background: var(--warn-soft); color: var(--warn); }
+  .pill.pendiente { background: var(--pend-soft); color: var(--muted); }
+  .pill.maqueta { background: var(--bad-soft); color: var(--bad); }
+  .pill.rojo { background: var(--bad-soft); color: var(--bad); }
+  .pill.verde { background: var(--ok-soft); color: var(--ok); }
+  .pill.ambar { background: var(--warn-soft); color: var(--warn); }
+  .ficha { border-top: 1px solid var(--border); padding: 15px; display: flex;
+    flex-direction: column; gap: 13px; }
+  .ficha h4 { margin: 0 0 4px; font-size: 12.5px; letter-spacing: .04em; }
+  .ficha p, .ficha li { font-size: 13.5px; margin: 0; }
+  .ficha ul, .ficha ol { margin: 4px 0 0; padding-left: 20px; display: flex;
+    flex-direction: column; gap: 4px; }
+  .pendlist { list-style: none; padding: 0; margin: 4px 0 0; display: flex;
+    flex-direction: column; gap: 6px; }
+  .pendlist li { display: flex; align-items: baseline; gap: 8px; font-size: 13.5px; }
+  .pendlist input { accent-color: var(--amber-tick); }
+  .pendlist .est { margin-left: auto; font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .pendlist li.ticked label { color: var(--warn); }
+  .ticknote { font-size: 11.5px; color: var(--warn); }
+  .copybtn { align-self: flex-start; appearance: none; border: 1px solid var(--accent);
+    background: var(--accent-soft); color: var(--accent); font: 600 12.5px/1 system-ui, sans-serif;
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+  .copybtn:hover { background: var(--accent); color: var(--surface); }
+  .issue { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  .debt { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--bad);
+    border-radius: 10px; padding: 14px 16px; margin-top: 26px; }
+  .debt h3 { margin: 0 0 8px; font-size: 14px; }
+  .debt ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 5px;
+    font-size: 13.5px; }
+  .plansummary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;
+    font-variant-numeric: tabular-nums; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 16px; min-width: 120px; }
+  .stat b { display: block; font-size: 20px; font-weight: 650; }
+  .stat span { font-size: 11.5px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .06em; font-family: ui-monospace, Menlo, monospace; }
+  .sesion { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 12px; }
+  .sesion.next { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .sesion > summary { list-style: none; cursor: pointer; padding: 13px 15px; display: flex;
+    align-items: center; gap: 10px; flex-wrap: wrap; }
+  .sesion > summary::-webkit-details-marker { display: none; }
+  .badge { font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; padding: 2px 8px;
+    border-radius: 4px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+  .nextlab { font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; color: var(--accent);
+    font-weight: 700; letter-spacing: .08em; }
+  .mapflow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: 14px 0 6px; }
+  .mapnode { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; min-width: 150px; cursor: pointer; }
+  .mapnode .nm { font-weight: 650; font-size: 13.5px; display: block; margin-bottom: 4px; }
+  .maparrow { display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 8px; color: var(--muted); font-size: 11px; text-align: center; max-width: 150px; }
+  .maparrow b { font-size: 15px; color: var(--accent); }
+  .maparrow .who { font-family: ui-monospace, Menlo, monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: .06em; }
+  .who.humano { color: var(--warn); }
+  .who.auto { color: var(--ok); }
+  .layer { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 12px; }
+  .layer h3 { margin: 0 0 8px; font-size: 13px; font-family: ui-monospace, Menlo, monospace;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .layer ul { margin: 0; padding-left: 20px; font-size: 13.5px; display: flex;
+    flex-direction: column; gap: 5px; }
+  .warntag { color: var(--bad); font-weight: 600; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .dchip, .tchip, .rchip, .chip { appearance: none; cursor: pointer; font: 600 12px/1 ui-monospace, Menlo, monospace;
+    padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--muted); }
+  .dchip[aria-pressed="true"], .tchip[aria-pressed="true"], .rchip[aria-pressed="true"] {
+    background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .adr { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 12px; }
+  .adr > summary { list-style: none; cursor: pointer; padding: 12px 15px; display: flex;
+    gap: 10px; align-items: center; flex-wrap: wrap; }
+  .adr > summary::-webkit-details-marker { display: none; }
+  .adr .body { border-top: 1px solid var(--border); padding: 13px 15px; font-size: 13.5px;
+    display: flex; flex-direction: column; gap: 8px; }
+  .adr .body p { margin: 0; }
+  .adr .body b.lab { font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: block; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px;
+    font-variant-numeric: tabular-nums; }
+  .tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 16px; }
+  th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--border);
+    vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  td code, .ficha code { font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+    background: var(--surface2); padding: 1px 5px; border-radius: 4px; }
+  .hist { border-left: 2px solid var(--border); padding-left: 16px; display: flex;
+    flex-direction: column; gap: 10px; margin-top: 8px; }
+  .hist .h { font-size: 13.5px; }
+  .hist .h b { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--accent); }
+  .uso { background: var(--surface2); border-radius: 10px; padding: 13px 16px; margin-top: 26px;
+    font-size: 13px; color: var(--muted); }
+  .uso b { color: var(--ink); }
+  @media (prefers-reduced-motion: no-preference) {
+    details.card, .sesion, .adr { transition: border-color .15s ease; }
+  }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Tracker vivo · auditoría de obra</div>
+    <h1><span class="mono">doc-arquitecto</span> — plugin de Claude Code</h1>
+    <div class="calib">
+      <span class="cchip">última auditoría: <b id="lastaudit"></b></span>
+      <span class="cchip">unidad: sesiones (~2-4h)</span>
+      <span class="cchip">1 máquina · Fede + Claude</span>
+      <span class="cchip">metodología: mixta SDD</span>
+      <span class="cchip">loop: orquestado (/orquestar)</span>
+      <span class="cchip">firma: todo se firma</span>
+      <span class="cchip">cola: issues #2–#5 (repo privado)</span>
+    </div>
+    <div class="meterrow">
+      <div class="meter" role="meter" aria-label="Progreso del plan"><i id="meterfill"></i></div>
+      <span class="meterlab" id="meterlab"></span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Pestañas del tracker">
+  <div class="wrap" role="tablist">
+    <button role="tab" data-tab="tablero" aria-selected="true">📋 Tablero</button>
+    <button role="tab" data-tab="plan" aria-selected="false">🗓️ Plan</button>
+    <button role="tab" data-tab="mapa" aria-selected="false">🗺️ Mapa</button>
+    <button role="tab" data-tab="stack" aria-selected="false">🔧 Stack</button>
+    <button role="tab" data-tab="decisiones" aria-selected="false">⚖️ Decisiones</button>
+    <button role="tab" data-tab="tests" aria-selected="false">🧪 Tests</button>
+    <button role="tab" data-tab="referencias" aria-selected="false">📚 Referencias</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <section class="tab active" id="tab-tablero">
+    <h2>Tablero de bloques</h2>
+    <p class="lede">Las sesiones del plan de construcción (FICHA §7) son los bloques de esta obra.
+    Tick ámbar = marcado sin verificar; verde solo tras re-auditoría en código.</p>
+    <div id="zonas"></div>
+    <div class="debt" id="debtbox"></div>
+    <div class="uso">
+      <b>Cómo se usa:</b> abrí la ficha de un bloque → «Copiar encargo» → pegalo en una sesión de
+      Claude Code (o dejá que <code>/orquestar</code> tome el issue). Al terminar, marcá el tick
+      (queda ámbar) y pedí «actualizá el tracker»: la re-auditoría verifica EN CÓDIGO y recién ahí
+      pasa a verde. En modo orquestado el equivalente del ámbar es el PR esperando tu firma.
+    </div>
+    <h2 style="margin-top:26px">Historial</h2>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <section class="tab" id="tab-plan">
+    <h2>Plan de sesiones</h2>
+    <p class="lede">Ordenadas por dependencia. Cada sesión linkea su issue de GitHub (la cola que
+    consume /orquestar) y lleva su badge de tratamiento metodológico.</p>
+    <div class="plansummary" id="plansummary"></div>
+    <div id="sesiones"></div>
+  </section>
+
+  <section class="tab" id="tab-mapa">
+    <h2>Mapa de la obra</h2>
+    <p class="lede">El flujo de construcción del plugin, de la ficha firmada a la v1.0. Las aristas
+    dicen qué dispara cada paso y si es automático o humano.</p>
+    <div class="mapflow" id="mapflow"></div>
+    <h2 style="margin-top:30px">El ciclo que el producto cierra</h2>
+    <p class="lede">Lo que doc-arquitecto + audit-tracker arman juntos, instalados en un proyecto:</p>
+    <div class="mapflow">
+      <div class="mapnode" style="cursor:default"><span class="nm mono">/documentar</span>escribe el plano (entrevista)</div>
+      <div class="maparrow"><b>→</b><span class="who humano">humano decide</span></div>
+      <div class="mapnode" style="cursor:default"><span class="nm mono">/auditar-docs</span>audita el plano</div>
+      <div class="maparrow"><b>→</b><span class="who auto">auto</span></div>
+      <div class="mapnode" style="cursor:default"><span class="nm">Encargos</span>construyen la obra</div>
+      <div class="maparrow"><b>→</b><span class="who humano">humano valida</span></div>
+      <div class="mapnode" style="cursor:default"><span class="nm mono">/audit-tracker</span>audita la obra</div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-stack">
+    <h2>Stack por capas</h2>
+    <div class="layer">
+      <h3>Cliente</h3>
+      <ul>
+        <li><b>Claude Code CLI</b> — ejecuta los comandos; los plugins cargan al inicio de sesión, namespaceados (<code>/doc-arquitecto:documentar</code>).</li>
+        <li><b>Sistema de plugins</b> — marketplace <code>fede-tools</code> (source: directorio local). <span class="warntag">⚠️ La caché instalada NO se sincroniza sola: hoy sirve la v0.1.0 placeholder.</span></li>
+      </ul>
+    </div>
+    <div class="layer">
+      <h3>Datos</h3>
+      <ul>
+        <li><b>Git / GitHub</b> — <code>hifede1/claude-doc-arquitecto</code> <span class="warntag">⚠️ privado hasta S05: la instalación remota de terceros falla</span>. Issues #2–#5 = cola de trabajo; PRs = canal de firma.</li>
+        <li><b>localStorage</b> — ticks ámbar de este tracker (viven en UN navegador; el tracker es mapa, no despachador).</li>
+      </ul>
+    </div>
+    <div class="layer">
+      <h3>Servicios</h3>
+      <ul>
+        <li><b>gh CLI</b> — dos cuentas en esta máquina: <code>hifede1</code> (este repo) y <code>estebaproject</code>. <span class="warntag">⚠️ Verificar la cuenta activa antes de operar.</span></li>
+      </ul>
+    </div>
+    <div class="layer">
+      <h3>Calidad</h3>
+      <ul>
+        <li><b>CI validate.yml</b> — 3 checks estructurales (JSON, comandos, consistencia). Sin checks de contenido de comandos (deuda menor aceptada).</li>
+        <li><b>Protocolo de corridas</b> — los criterios de la FICHA se verifican con corridas reales en repos de prueba (§6), no con tests unitarios: el producto son prompts.</li>
+      </ul>
+    </div>
+    <h2 style="margin-top:26px">Recorridos de un dato punta a punta</h2>
+    <div class="tablewrap"><table id="recorridos"></table></div>
+  </section>
+
+  <section class="tab" id="tab-decisiones">
+    <h2>Registro de decisiones (ADR)</h2>
+    <p class="lede">El porqué del sistema. Log aditivo: las tomadas jamás se borran; las pendientes
+    que ya son un pendiente del tablero se derivan en vivo y desaparecen solas al cerrarse.</p>
+    <div class="filters" id="dfilters">
+      <button class="dchip" data-f="todas" aria-pressed="true">todas</button>
+      <button class="dchip" data-f="aceptada" aria-pressed="false">tomadas</button>
+      <button class="dchip" data-f="pendiente" aria-pressed="false">pendientes</button>
+    </div>
+    <div id="adrs"></div>
+  </section>
+
+  <section class="tab" id="tab-tests">
+    <h2>Mapa de evidencia</h2>
+    <p class="lede">Qué está clavado por verificación y qué es deuda. En un repo de prompts los
+    «tests» son los gates del CI + las corridas protocolizadas de la FICHA §6.</p>
+    <h3 style="font-size:14px">Gates reales</h3>
+    <div class="tablewrap"><table id="gates"></table></div>
+    <h3 style="font-size:14px">Cobertura a altitud de flujo</h3>
+    <div class="tablewrap"><table id="tflows"></table></div>
+    <h3 style="font-size:14px">Contrato criterios ↔ verificación</h3>
+    <div class="tablewrap"><table id="crit"></table></div>
+  </section>
+
+  <section class="tab" id="tab-referencias">
+    <h2>Catálogo de referencias</h2>
+    <p class="lede"><code>docs/references/</code> = el CÓMO técnico · <code>docs/business/</code> =
+    el QUÉ del negocio (acá, la FICHA hace de contrato de diseño). Las 🟠/🔴 son accionables.</p>
+    <div class="filters" id="rfilters">
+      <button class="rchip" data-f="todas" aria-pressed="true">todas</button>
+      <button class="rchip" data-f="fresca" aria-pressed="false">🟢 frescas</button>
+      <button class="rchip" data-f="faltante" aria-pressed="false">🔴 faltantes</button>
+    </div>
+    <div id="refs"></div>
+  </section>
+</div>
+
+<script>
+'use strict';
+/* ============ DATOS (editar SOLO esto en actualizaciones normales) ============ */
+const LAST_AUDIT = '2026-07-17';
+const CLOSED_COUNT = 0;
+const REPO = 'https://github.com/hifede1/claude-doc-arquitecto';
+
+const DATA = [
+  { zona: 'Cimientos del plugin', bloques: [
+    { id: 's01', nombre: 'S01 — Esqueleto', estado: 'hecho', issue: null,
+      plante: 'Repo + marketplace fede-tools + comandos instalables. Sin esqueleto no hay distribución: todo lo demás se monta acá.',
+      metodo: 'MODO MANTENIMIENTO: al tocar manifiestos, correr los 3 checks del CI en local; al renombrar comandos, recordar que los ticks e IDs de la caché instalada no se migran solos.',
+      resultados: ['Instalable desde el marketplace (verificado 2026-07-17: /plugin install funciona y los comandos aparecen namespaceados).'],
+      refs: [{ t: 'claude-code-plugins.md (repo audit-tracker)', freshref: 'ref-plugins' }],
+      pends: [] },
+  ]},
+  { zona: '/documentar', bloques: [
+    { id: 's02', nombre: 'S02 — Modo nuevo (entrevista + generación)', estado: 'curso', issue: 2,
+      plante: 'La mitad productiva del comando: entrevista guiada en 4 etapas y generación de docs/ con el contrato de formato del audit-tracker. Escrito y en PR #1 — pero escrito ≠ hecho: falta la corrida real del criterio 1.',
+      metodo: 'Firmar PR #1 (comentario «✅ validado») → mergear → actualizar la caché del plugin → repo de prueba VACÍO → corrida completa de la entrevista → inspección de la salida contra el criterio 1.',
+      resultados: ['docs/ completo generado en repo vacío (verificación: inspección del árbol).',
+        'Cada sesión del PLAN generado con ≥1 criterio verificable (verificación: lectura de PLAN.md).',
+        'Cero decisiones inventadas (verificación: transcript de la corrida).'],
+      refs: [{ t: 'FICHA §3 y §6', freshref: 'ref-ficha' }],
+      pends: [
+        { id: 's02-firma', txt: 'Firmar PR #1 (✅ validado) y mergear', est: 0.1 },
+        { id: 's02-cache', txt: 'Actualizar plugin instalado a v0.2.0 (la caché no se sincroniza sola)', est: 0.1 },
+        { id: 's02-corrida', txt: 'Corrida de verificación del criterio 1 en repo de prueba vacío', est: 0.3 },
+      ] },
+    { id: 's03', nombre: 'S03 — Modo existente (huecos + diffs)', estado: 'pendiente', issue: 3,
+      plante: 'Hoy el comando frena honestamente ante un repo con docs o código. S03 le da la otra mitad: detectar huecos y completarlos SIN pisar nada — un documentador que pisa lo escrito destruye el contrato que debía cuidar.',
+      metodo: 'Inventario de lo existente → huecos contra el contrato → entrevista SOLO de lo faltante → diff confirmado por archivo → idempotencia (re-corrida = cero escrituras). v0.3.0 + CHANGELOG.',
+      resultados: ['Rechazo de un diff deja el original INTACTO (verificación: git diff tras rechazar = vacío).',
+        'No re-pregunta lo documentado (verificación: transcript).',
+        'Re-corrida sobre repo completo = cero escrituras (verificación: git status limpio).'],
+      refs: [{ t: 'FICHA §3 (modo existente)', freshref: 'ref-ficha' }],
+      pends: [
+        { id: 's03-inventario', txt: 'Inventario de docs/código existentes en Fase 0', est: 0.2 },
+        { id: 's03-huecos', txt: 'Detección de huecos contra el contrato', est: 0.3 },
+        { id: 's03-diffs', txt: 'Completado con diffs confirmados por archivo', est: 0.3 },
+        { id: 's03-idem', txt: 'Idempotencia verificada (re-corrida sin escrituras)', est: 0.2 },
+      ] },
+  ]},
+  { zona: '/auditar-docs', bloques: [
+    { id: 's04', nombre: 'S04 — Las seis dimensiones de auditoría', estado: 'pendiente', issue: 4,
+      plante: 'El documentador no corrige su propio examen: /auditar-docs audita el plano. Sin él, hay quien escribe el contrato pero nadie que lo audite. Tratamiento SDD ligero: hay decisiones de diseño reales (heurísticas de contradicción, formato del informe).',
+      metodo: 'Generar ANTES la referencia auditoria-de-docs.md → /sdd-ff para fijar heurísticas y formato → implementar las 6 dimensiones → informe file:línea → arreglos UNO POR UNO con confirmación. v0.4.0.',
+      resultados: ['Contradicción sembrada detectada y reportada con file:línea (verificación: repo de prueba con el defecto).',
+        'Criterio no verificable sembrado detectado (verificación: mismo repo).',
+        'Arreglo rechazado NO se aplica (verificación: rechazar uno y comprobar).'],
+      refs: [{ t: 'FICHA §3 (/auditar-docs)', freshref: 'ref-ficha' }, { t: '🔴 auditoria-de-docs.md — FALTANTE', freshref: 'ref-auditoria' }],
+      pends: [
+        { id: 's04-ref', txt: 'Generar docs/references/auditoria-de-docs.md (triggers + fecha)', est: 0.2 },
+        { id: 's04-sdd', txt: 'SDD ligero: fijar heurísticas por dimensión y formato del informe', est: 0.2 },
+        { id: 's04-dims', txt: 'Implementar las seis dimensiones + informe file:línea', est: 0.4 },
+        { id: 's04-fix', txt: 'Arreglos ofrecidos uno por uno con confirmación', est: 0.2 },
+      ] },
+  ]},
+  { zona: 'Integración y cierre', bloques: [
+    { id: 's05', nombre: 'S05 — Pipeline e2e + publicación', estado: 'pendiente', issue: 5,
+      plante: 'La promesa central es «pipeline sin traducción»: la salida de /documentar es la entrada de /audit-tracker. S05 lo PRUEBA de punta a punta y publica el plugin.',
+      metodo: 'En el repo de prueba de S02: /documentar → /auditar-docs → /audit-tracker en secuencia → verificar consumo sin adaptación → README final → repo público + tag v1.0.0 → instalación remota en máquina limpia.',
+      resultados: ['/audit-tracker consume los docs generados sin adaptación manual (verificación: corrida en secuencia).',
+        'Decisiones preguntadas con opciones y tradeoffs en el transcript — cero inventadas (verificación: revisión).',
+        'Instalación remota funciona desde GitHub (verificación: máquina limpia).'],
+      refs: [{ t: 'FICHA §6 (criterios 4 y 5)', freshref: 'ref-ficha' }],
+      pends: [
+        { id: 's05-e2e', txt: 'Pipeline e2e: documentar → auditar-docs → audit-tracker', est: 0.4 },
+        { id: 's05-readme', txt: 'README final (uso real de ambos comandos)', est: 0.2 },
+        { id: 's05-publico', txt: 'Pasar el repo a público + tag v1.0.0', est: 0.2 },
+        { id: 's05-instal', txt: 'Instalación remota verificada en máquina limpia', est: 0.2 },
+      ] },
+  ]},
+];
+
+const DEBT = [
+  'Drift máquina↔repo: la caché instalada del plugin sirve la v0.1.0 placeholder — corrés /documentar hoy y ejecuta el esqueleto (cierra con el pend s02-cache).',
+  'Deuda de verificación: criterio 1 de la FICHA sin corrida real (pend s02-corrida). S02 puede estar «escrita» y romperse en la primera entrevista real.',
+  'Repo privado: la instalación remota para terceros falla hasta S05 (decisión aceptada, no olvidada).',
+  'CI sin checks de contenido de los comandos (solo estructura) — deuda menor aceptada para un repo de prompts.',
+];
+
+const PLAN = [
+  { id: 'ps02', titulo: 'S02-cierre — Verificar /documentar modo nuevo', issue: 2, badge: 'directo',
+    prereq: 'PR #1 firmado y mergeado', bloque: 's02', next: true,
+    objetivo: 'Probar en un repo vacío real que la entrevista produce el contrato completo (criterio 1).' },
+  { id: 'ps03', titulo: 'S03 — Modo existente: huecos, diffs, idempotencia', issue: 3, badge: 'directo',
+    prereq: '#2 (contrato de formatos probado)', bloque: 's03',
+    objetivo: 'Completar docs existentes sin pisar nada, con diff confirmado por archivo.' },
+  { id: 'ps04', titulo: 'S04 — /auditar-docs: seis dimensiones', issue: 4, badge: 'SDD ligero /sdd-ff',
+    prereq: '#2 (formato probado) · independiente de S03', bloque: 's04',
+    objetivo: 'El auditor del plano: informe file:línea + arreglos confirmados.' },
+  { id: 'ps05', titulo: 'S05 — Integración, README y publicación', issue: 5, badge: 'directo',
+    prereq: '#3 y #4', bloque: 's05',
+    objetivo: 'Pipeline e2e probado + repo público + v1.0.0.' },
+];
+
+const CHANGELOG = [
+  { fecha: '2026-07-17', txt: 'Auditoría inicial y tracker v1. S01 verde (verificado). S02 en PR #1 esperando firma. Repo privado creado en GitHub, cola de despacho publicada (issues #2–#5), calibración: sesiones · 1 máquina · mixto SDD · loop orquestado · todo se firma.' },
+];
+
+const DECISIONS = [
+  { id: 'd01', fecha: '2026-07-17', titulo: 'Plugin separado del audit-tracker', estado: 'aceptada',
+    contexto: 'doc-arquitecto podía ser comandos dentro del audit-tracker o un skill suelto.',
+    opciones: 'Comandos dentro del audit-tracker (un solo plugin, pero mezcla plano y obra) · skill suelto (sin versionado ni marketplace) · plugin separado.',
+    decision: 'Plugin separado con marketplace propio fede-tools.',
+    porque: 'Documentar y auditar código son responsabilidades distintas con ritmos de versión distintos. Decidido por Fede (FICHA §4).',
+    consecuencias: 'Dos repos hermanos con el mismo patrón; se instalan juntos.', superaA: null },
+  { id: 'd02', fecha: '2026-07-17', titulo: 'La salida es el formato que consume audit-tracker', estado: 'aceptada',
+    contexto: 'Qué estructura generan los docs.',
+    opciones: 'Formato genérico (README + specs + ADRs sueltos) · el contrato del audit-tracker (fichas 🎯🛠️✅📚⛓️, references/ con triggers, business/).',
+    decision: 'El contrato del audit-tracker, extraído de su código real.',
+    porque: 'Pipeline sin traducción: la salida de uno es la entrada del otro. Decidido por Fede.',
+    consecuencias: 'Cambios de formato en audit-tracker impactan acá — territorio del criterio 4 (e2e).', superaA: null },
+  { id: 'd03', fecha: '2026-07-17', titulo: 'Entrevista guiada; la máquina no inventa lo estructural', estado: 'aceptada',
+    contexto: 'Cómo se generan los docs de un proyecto desde cero.',
+    opciones: 'Generación automática leyendo el código · entrevista guiada al humano.',
+    decision: 'Entrevista guiada; lo no decidido queda como pendiente explícita.',
+    porque: 'Docs inventados por la máquina son el problema, no la solución (regla heredada de /orquestar).',
+    consecuencias: 'La entrevista bloquea esperando al humano — a diferencia del audit-tracker, acá bloquear ES correcto.', superaA: null },
+  { id: 'd04', fecha: '2026-07-17', titulo: 'Markdown en el repo como fuente de verdad', estado: 'aceptada',
+    contexto: 'Dónde viven los docs generados.',
+    opciones: 'Artifact HTML · wiki externa · markdown en git.',
+    decision: 'Markdown en el repo.',
+    porque: 'Los docs viajan con el código y se versionan; el HTML vistoso ya lo pone el tracker.',
+    consecuencias: 'v1 no traduce desde Notion/Confluence (fuera de alcance).', superaA: null },
+  { id: 'd05', fecha: '2026-07-17', titulo: 'Idempotencia con diffs confirmados', estado: 'aceptada',
+    contexto: 'Qué pasa al re-correr /documentar.',
+    opciones: 'Regenerar desde cero · modo actualización con diffs confirmados.',
+    decision: 'Idempotente: re-correr = actualización, diff por archivo, jamás pisar sin confirmar.',
+    porque: 'Un documentador que pisa lo escrito destruye el contrato que debía cuidar.',
+    consecuencias: 'S03 entera existe para esto; criterio 2 lo clava.', superaA: null },
+  { id: 'd06', fecha: '2026-07-17', titulo: 'Calibración del loop: orquestado + mixto SDD', estado: 'aceptada',
+    contexto: 'Cómo se ejecuta el trabajo restante del propio plugin (calibración de esta auditoría).',
+    opciones: 'Loop a mano · despacho multi-máquina · orquestado con firma humana.',
+    decision: 'Orquestado (/orquestar) — activa despacho aunque haya una máquina. Metodología mixta: S04 = SDD ligero, resto directo. Umbral de firma: NADA automergea.',
+    porque: 'Fede quiere el loop autónomo quedándose solo en la validación; S04 es la única sesión con decisiones de diseño abiertas.',
+    consecuencias: 'La cola vive en GitHub (issues #2–#5); la firma es comentario «✅ validado» (misma cuenta).', superaA: null },
+  { id: 'd07', fecha: '2026-07-17', titulo: 'Repo privado hasta S05', estado: 'aceptada',
+    contexto: 'El modo orquestado necesitaba remote YA; publicar el plugin es parte de S05.',
+    opciones: 'Público ahora · privado ahora y público en S05 · diferir el remote (bloquea el loop).',
+    decision: 'Privado ahora; el pase a público es un pend de S05.',
+    porque: 'Habilita issues y PRs hoy sin publicar un plugin a medio construir. Decidido por Fede en la calibración.',
+    consecuencias: 'La instalación remota de terceros falla hasta S05 — listado como deuda visible.', superaA: null },
+];
+
+const DECISION_PENDS = [
+  { pendId: 's05-publico', note: 'La fecha del pase a público la decide Fede al llegar a S05 — hasta entonces, terceros no pueden instalar el plugin por remote.' },
+];
+
+const TESTS = {
+  gates: [
+    { name: 'Manifiestos JSON válidos', cmd: 'node -e "JSON.parse(fs…marketplace.json / plugin.json)"', estado: 'verde', fecha: '2026-07-17 (local)' },
+    { name: 'Estructura del plugin (2 comandos)', cmd: 'test -f plugins/doc-arquitecto/commands/{documentar,auditar-docs}.md', estado: 'verde', fecha: '2026-07-17 (local)' },
+    { name: 'Consistencia marketplace↔plugin', cmd: 'node -e "…entry.description === plugin.description"', estado: 'verde', fecha: '2026-07-17 (local)' },
+  ],
+  flows: [
+    { f: 'Instalación: marketplace → caché → comando namespaceado aparece y ejecuta', pill: 'ambar', ev: 'Verificado A MANO hoy (corrida real en sesión); sin check automatizado' },
+    { f: '/documentar modo nuevo: detección → entrevista → docs/ generado', pill: 'rojo', ev: 'Sin corrida — es el pend s02-corrida (issue #2)' },
+    { f: '/documentar modo existente: huecos → diffs → idempotencia', pill: 'rojo', ev: 'Futuro S03 (issue #3)' },
+    { f: '/auditar-docs sobre docs con defectos sembrados', pill: 'rojo', ev: 'Futuro S04 (issue #4)' },
+    { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'rojo', ev: 'Futuro S05 (issue #5)' },
+  ],
+  crit: [
+    { c: 'C1 — repo vacío → estructura completa, ≥1 criterio verificable por sesión', prot: 'Corrida protocolizada en repo de prueba (issue #2)', estado: 'deuda' },
+    { c: 'C2 — docs existentes: nada se pisa sin confirmación', prot: 'Corrida con docs sembrados + rechazo (S03)', estado: 'futuro' },
+    { c: 'C3 — contradicción y criterio no verificable sembrados: detectados con ubicación', prot: 'Repo de prueba con defectos plantados (S04)', estado: 'futuro' },
+    { c: 'C4 — audit-tracker consume la salida sin adaptación', prot: 'Corrida en secuencia (S05)', estado: 'futuro' },
+    { c: 'C5 — cero decisiones inventadas en la entrevista', prot: 'Revisión de transcript (S02-cierre y S05)', estado: 'deuda' },
+  ],
+};
+
+const REFS = [
+  { id: 'ref-ficha', tema: 'FICHA de diseño — contrato de construcción', fecha: '2026-07-17', frescura: 'fresca',
+    path: 'docs/FICHA.md', linea: 'Propósito, funciones, decisiones firmadas, criterios y plan. Hace de docs/business/ de este repo.',
+    triggers: ['diseño', 'criterios', 'plan', 'alcance'], usa: 'Todas las sesiones' },
+  { id: 'ref-plugins', tema: 'Plugins y marketplaces de Claude Code', fecha: '2026-07-13', frescura: 'fresca',
+    path: 'claude-audit-tracker/docs/references/claude-code-plugins.md (repo hermano)', linea: 'Anatomía, instalación, caché y gotchas de distribución — verificada empíricamente.',
+    triggers: ['plugin', 'marketplace', 'instalación', 'namespace', 'caché'], usa: 'S01 (hecho) · issue #2 (paso de caché)' },
+  { id: 'ref-auditoria', tema: 'Auditoría de documentación — heurísticas de las 6 dimensiones', fecha: null, frescura: 'faltante',
+    path: 'docs/references/auditoria-de-docs.md (NO EXISTE)', linea: 'Territorio nuevo de S04 sin referencia: generarla ANTES de ese encargo, con triggers y fecha.',
+    triggers: ['auditoría', 'contradicciones', 'criterios verificables', 'drift'], usa: 'Issue #4 — pend s04-ref' },
+];
+
+/* ============ LÓGICA DE RENDER (no tocar en actualizaciones normales) ============ */
+const $ = (s, r) => (r || document).querySelector(s);
+const TICKKEY = 'docarq-tracker-ticks';
+const getTicks = () => { try { return JSON.parse(localStorage.getItem(TICKKEY)) || {}; } catch (e) { return {}; } };
+const setTick = (id, v) => { const t = getTicks(); if (v) t[id] = 1; else delete t[id]; localStorage.setItem(TICKKEY, JSON.stringify(t)); };
+const bloques = DATA.flatMap(z => z.bloques);
+const allPends = bloques.flatMap(b => b.pends);
+const findPend = id => allPends.find(p => p.id === id) || null;
+const PILLTXT = { hecho: '✅ hecho', curso: '🟠 en curso', pendiente: '⚪ pendiente', maqueta: '⚠️ maqueta' };
+
+function fmtEst(n) { return n % 1 === 0 ? String(n) : n.toFixed(1); }
+
+function encargoText(b) {
+  const ticks = getTicks();
+  const abiertos = b.pends.filter(p => !ticks[p.id]);
+  return ['# Encargo — ' + b.nombre, '',
+    (b.issue ? 'Issue: ' + REPO + '/issues/' + b.issue + '\n' : '') + '🎯 PLANTEAMIENTO\n' + b.plante, '',
+    '🛠️ MÉTODO\n' + b.metodo, '',
+    '✅ RESULTADOS ESPERADOS (criterios de cierre)\n' + b.resultados.map(r => '- ' + r).join('\n'), '',
+    '📚 REFERENCIAS (leer antes; solo links, jamás copiar contenido)\n' + b.refs.map(r => '- ' + r.t).join('\n'), '',
+    '⏳ PENDIENTES ABIERTOS\n' + (abiertos.length ? abiertos.map(p => '- [ ] ' + p.txt).join('\n') : '(ninguno)'),
+  ].join('\n');
+}
+
+function renderTablero() {
+  const ticks = getTicks();
+  $('#zonas').innerHTML = DATA.map(z => '<div class="zone"><h3>' + z.zona + '</h3><div class="cards">' +
+    z.bloques.map(b => {
+      const abiertos = b.pends.filter(p => !ticks[p.id]);
+      const carga = abiertos.reduce((a, p) => a + p.est, 0);
+      return '<details class="card" id="card-' + b.id + '"><summary>' +
+        '<div class="cardtop"><span class="cardtitle">' + b.nombre + '</span>' +
+        '<span class="pill ' + b.estado + '">' + PILLTXT[b.estado] + '</span></div>' +
+        '<div class="cardmeta"><span>' + abiertos.length + ' pendientes</span>' +
+        (carga ? '<span>~' + fmtEst(carga) + ' sesiones</span>' : '') +
+        (b.issue ? '<span class="issue"><a href="' + REPO + '/issues/' + b.issue + '">issue #' + b.issue + '</a></span>' : '') +
+        (abiertos.length ? '<span>próximo: ' + abiertos[0].txt.slice(0, 48) + '…</span>' : '') +
+        '</div></summary><div class="ficha">' +
+        '<div><h4>🎯 Planteamiento</h4><p>' + b.plante + '</p></div>' +
+        '<div><h4>🛠️ Cómo trabajarlo</h4><p>' + b.metodo + '</p></div>' +
+        '<div><h4>✅ Resultados esperados</h4><ul>' + b.resultados.map(r => '<li>' + r + '</li>').join('') + '</ul></div>' +
+        '<div><h4>📚 Referencias</h4><ul>' + b.refs.map(r =>
+          '<li><a href="#referencias" data-ref="' + (r.freshref || '') + '">' + r.t + '</a></li>').join('') + '</ul></div>' +
+        (b.pends.length ? '<div><h4>Pendientes</h4><ul class="pendlist">' + b.pends.map(p =>
+          '<li class="' + (ticks[p.id] ? 'ticked' : '') + '"><input type="checkbox" id="tk-' + p.id + '" data-id="' + p.id + '"' +
+          (ticks[p.id] ? ' checked' : '') + '><label for="tk-' + p.id + '">' + p.txt +
+          (ticks[p.id] ? ' <span class="ticknote">· ámbar, sin verificar</span>' : '') + '</label>' +
+          '<span class="est">' + fmtEst(p.est) + ' ses</span></li>').join('') + '</ul></div>' : '') +
+        '<button class="copybtn" data-copy="' + b.id + '">📋 Copiar encargo</button>' +
+        '</div></details>';
+    }).join('') + '</div></div>').join('');
+  $('#debtbox').innerHTML = '<h3>⚠️ Maqueta y deuda transversal</h3><ul>' +
+    DEBT.map(d => '<li>' + d + '</li>').join('') + '</ul>';
+  $('#hist').innerHTML = CHANGELOG.map(c => '<div class="h"><b>' + c.fecha + '</b> — ' + c.txt + '</div>').join('');
+}
+
+function renderPlan() {
+  const ticks = getTicks();
+  const total = allPends.reduce((a, p) => a + p.est, 0);
+  const done = allPends.filter(p => ticks[p.id]).reduce((a, p) => a + p.est, 0);
+  $('#plansummary').innerHTML =
+    '<div class="stat"><b>' + fmtEst(total) + '</b><span>sesiones estimadas</span></div>' +
+    '<div class="stat"><b>' + fmtEst(done) + '</b><span>en ámbar (según ticks)</span></div>' +
+    '<div class="stat"><b>' + fmtEst(total - done) + '</b><span>restantes</span></div>' +
+    '<div class="stat"><b>' + CLOSED_COUNT + '</b><span>cierres verificados</span></div>';
+  $('#sesiones').innerHTML = PLAN.map(s => {
+    const b = bloques.find(x => x.id === s.bloque);
+    return '<details class="sesion' + (s.next ? ' next' : '') + '"><summary>' +
+      (s.next ? '<span class="nextlab">▶ PRÓXIMA</span>' : '') +
+      '<span class="cardtitle">' + s.titulo + '</span>' +
+      '<span class="badge">' + s.badge + '</span>' +
+      '<span class="issue"><a href="' + REPO + '/issues/' + s.issue + '">issue #' + s.issue + '</a></span>' +
+      '</summary><div class="ficha">' +
+      '<div><h4>Objetivo</h4><p>' + s.objetivo + '</p></div>' +
+      '<div><h4>⛓️ Prerrequisitos</h4><p>' + s.prereq + '</p></div>' +
+      (b ? '<div><h4>Tareas (ticks del bloque)</h4><p>Se marcan en la ficha del bloque «' + b.nombre + '» del Tablero.</p></div>' +
+        '<button class="copybtn" data-copy="' + b.id + '">📋 Copiar encargo</button>' : '') +
+      '</div></details>';
+  }).join('');
+}
+
+function renderMapa() {
+  const nodes = [
+    { id: null, nm: 'FICHA firmada', d: 'contrato de diseño', arrow: 'S01 construye', who: 'auto' },
+    { id: 's01', nm: 'S01 Esqueleto', d: 'instalable', arrow: 'PR #1 espera firma', who: 'humano' },
+    { id: 's02', nm: 'S02 Modo nuevo', d: 'en validación', arrow: '/orquestar toma #3', who: 'auto' },
+    { id: 's03', nm: 'S03 Modo existente', d: 'pendiente', arrow: '/orquestar toma #4', who: 'auto' },
+    { id: 's04', nm: 'S04 /auditar-docs', d: 'SDD ligero', arrow: 'firma de Fede en cada PR', who: 'humano' },
+    { id: 's05', nm: 'S05 Cierre', d: 'e2e + público', arrow: 'tag', who: 'humano' },
+    { id: null, nm: 'v1.0.0', d: 'plugin publicado', arrow: null },
+  ];
+  $('#mapflow').innerHTML = nodes.map(n => {
+    const b = n.id ? bloques.find(x => x.id === n.id) : null;
+    const pill = b ? '<span class="pill ' + b.estado + '">' + PILLTXT[b.estado] + '</span>' : '';
+    return '<div class="mapnode" ' + (n.id ? 'data-goto="' + n.id + '" role="button" tabindex="0"' : 'style="cursor:default"') + '>' +
+      '<span class="nm">' + n.nm + '</span>' + pill + '<div style="font-size:11.5px;color:var(--muted);margin-top:4px">' + n.d + '</div></div>' +
+      (n.arrow ? '<div class="maparrow"><b>→</b><span>' + n.arrow + '</span><span class="who ' + n.who + '">' + n.who + '</span></div>' : '');
+  }).join('');
+}
+
+function renderStack() {
+  $('#recorridos').innerHTML = '<tr><th>Recorrido</th><th>Estado</th></tr>' + TESTS.flows.map(f =>
+    '<tr><td>' + f.f + '</td><td><span class="pill ' + f.pill + '">' +
+    (f.pill === 'verde' ? '🟢' : f.pill === 'ambar' ? '🟠' : '🔴') + '</span> ' + f.ev + '</td></tr>').join('');
+}
+
+let dFilter = 'todas';
+function renderDecisiones() {
+  const derived = DECISION_PENDS.map(dp => {
+    const p = findPend(dp.pendId);
+    return p ? { id: 'dp-' + dp.pendId, fecha: '—', titulo: p.txt, estado: 'pendiente',
+      contexto: dp.note, opciones: null, decision: null, porque: null,
+      consecuencias: 'Derivada en vivo del pendiente «' + dp.pendId + '» — al cerrarse en re-auditoría, esta ficha desaparece sola.', superaA: null } : null;
+  }).filter(Boolean);
+  const all = DECISIONS.concat(derived).filter(d => dFilter === 'todas' || d.estado === dFilter);
+  $('#adrs').innerHTML = all.map(d => '<details class="adr"><summary>' +
+    '<span class="mono" style="font-size:11px;color:var(--muted)">' + d.id.toUpperCase() + '</span>' +
+    '<span class="cardtitle">' + d.titulo + '</span>' +
+    '<span class="pill ' + (d.estado === 'aceptada' ? 'hecho' : 'curso') + '">' + d.estado + '</span>' +
+    '<span style="font-size:12px;color:var(--muted)">' + d.fecha + '</span>' +
+    '</summary><div class="body">' +
+    '<p><b class="lab">Contexto</b>' + d.contexto + '</p>' +
+    (d.opciones ? '<p><b class="lab">Opciones evaluadas</b>' + d.opciones + '</p>' : '') +
+    (d.decision ? '<p><b class="lab">Decisión</b>' + d.decision + '</p>' : '') +
+    (d.porque ? '<p><b class="lab">Porqué</b>' + d.porque + '</p>' : '') +
+    (d.consecuencias ? '<p><b class="lab">Consecuencias</b>' + d.consecuencias + '</p>' : '') +
+    (d.superaA ? '<p><b class="lab">Supera a</b>' + d.superaA + '</p>' : '') +
+    '</div></details>').join('') || '<p class="lede">Sin decisiones en este filtro.</p>';
+}
+
+function renderTests() {
+  $('#gates').innerHTML = '<tr><th>Gate</th><th>Comando</th><th>Última corrida</th></tr>' +
+    TESTS.gates.map(g => '<tr><td>' + g.name + '</td><td><code>' + g.cmd + '</code></td>' +
+    '<td><span class="pill ' + g.estado + '">' + (g.estado === 'verde' ? '🟢 verde' : '🔴 rojo') + '</span> ' + g.fecha + '</td></tr>').join('');
+  $('#tflows').innerHTML = '<tr><th>Flujo</th><th>Evidencia</th></tr>' + TESTS.flows.map(f =>
+    '<tr><td>' + f.f + '</td><td><span class="pill ' + f.pill + '">' +
+    (f.pill === 'verde' ? '🟢 clavado' : f.pill === 'ambar' ? '🟠 solo manual' : '🔴 sin verificar') + '</span> ' + f.ev + '</td></tr>').join('');
+  $('#crit').innerHTML = '<tr><th>Criterio (FICHA §6)</th><th>Qué lo protege</th><th>Estado</th></tr>' +
+    TESTS.crit.map(c => '<tr><td>' + c.c + '</td><td>' + c.prot + '</td>' +
+    '<td><span class="pill ' + (c.estado === 'deuda' ? 'ambar' : 'pendiente') + '">' +
+    (c.estado === 'deuda' ? '🟠 deuda de verificación' : '⚪ futuro') + '</span></td></tr>').join('');
+}
+
+let rFilter = 'todas';
+function renderRefs() {
+  const all = REFS.filter(r => rFilter === 'todas' || r.frescura === rFilter);
+  $('#refs').innerHTML = all.map(r => '<details class="adr" id="' + r.id + '"><summary>' +
+    '<span class="cardtitle">' + r.tema + '</span>' +
+    '<span class="pill ' + (r.frescura === 'fresca' ? 'hecho' : r.frescura === 'faltante' ? 'maqueta' : 'curso') + '">' +
+    (r.frescura === 'fresca' ? '🟢 fresca' : r.frescura === 'faltante' ? '🔴 faltante' : '🟠 refrescar') + '</span>' +
+    '<span style="font-size:12px;color:var(--muted)">' + (r.fecha || 'sin fecha') + '</span>' +
+    '</summary><div class="body">' +
+    '<p>' + r.linea + '</p>' +
+    '<p><b class="lab">Path</b><code>' + r.path + '</code></p>' +
+    '<p><b class="lab">Triggers</b>' + r.triggers.map(t => '<code>' + t + '</code>').join(' ') + '</p>' +
+    '<p><b class="lab">Quién la usa</b>' + r.usa + '</p>' +
+    '</div></details>').join('') || '<p class="lede">Sin referencias en este filtro.</p>';
+}
+
+function renderMeter() {
+  const ticks = getTicks();
+  const totalItems = allPends.length + CLOSED_COUNT;
+  const amber = allPends.filter(p => ticks[p.id]).length;
+  const pct = totalItems ? Math.round(((CLOSED_COUNT) / totalItems) * 100) : 0;
+  $('#meterfill').style.width = pct + '%';
+  $('#meterlab').innerHTML = '<b>' + CLOSED_COUNT + '</b> verificados · <b>' + amber +
+    '</b> en ámbar · <b>' + (allPends.length - amber) + '</b> abiertos — ' + pct + '% verde';
+  $('#lastaudit').textContent = LAST_AUDIT;
+}
+
+function renderAll() { renderMeter(); renderTablero(); renderPlan(); renderMapa(); renderStack(); renderDecisiones(); renderTests(); renderRefs(); }
+
+function showTab(name, push) {
+  document.querySelectorAll('nav.tabs button').forEach(b =>
+    b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  document.querySelectorAll('section.tab').forEach(s =>
+    s.classList.toggle('active', s.id === 'tab-' + name));
+  if (push) history.replaceState(null, '', '#' + name);
+}
+
+document.addEventListener('click', e => {
+  const tabBtn = e.target.closest('nav.tabs button');
+  if (tabBtn) { showTab(tabBtn.dataset.tab, true); return; }
+  const copy = e.target.closest('[data-copy]');
+  if (copy) {
+    const b = bloques.find(x => x.id === copy.dataset.copy);
+    if (b) navigator.clipboard.writeText(encargoText(b)).then(() => {
+      copy.textContent = '✓ Copiado'; setTimeout(() => { copy.textContent = '📋 Copiar encargo'; }, 1500);
+    });
+    return;
+  }
+  const node = e.target.closest('[data-goto]');
+  if (node) {
+    showTab('tablero', true);
+    const card = $('#card-' + node.dataset.goto);
+    if (card) { card.open = true; card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    return;
+  }
+  const dchip = e.target.closest('.dchip');
+  if (dchip) { dFilter = dchip.dataset.f;
+    document.querySelectorAll('.dchip').forEach(c => c.setAttribute('aria-pressed', String(c === dchip)));
+    renderDecisiones(); return; }
+  const rchip = e.target.closest('.rchip');
+  if (rchip) { rFilter = rchip.dataset.f;
+    document.querySelectorAll('.rchip').forEach(c => c.setAttribute('aria-pressed', String(c === rchip)));
+    renderRefs(); return; }
+  const refLink = e.target.closest('[data-ref]');
+  if (refLink && refLink.dataset.ref) {
+    e.preventDefault(); showTab('referencias', true);
+    const el = document.getElementById(refLink.dataset.ref);
+    if (el) { el.open = true; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }
+});
+
+document.addEventListener('change', e => {
+  const cb = e.target.closest('.pendlist input[data-id]');
+  if (cb) { setTick(cb.dataset.id, cb.checked); renderMeter(); renderTablero(); renderPlan(); }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('[data-goto]')) e.target.click();
+});
+
+renderAll();
+const initTab = location.hash.replace('#', '');
+if (['tablero', 'plan', 'mapa', 'stack', 'decisiones', 'tests', 'referencias'].includes(initTab)) showTab(initTab, false);
+</script>
