@@ -16,7 +16,8 @@ Inspeccioná el repo ANTES de preguntar nada:
 - ¿Hay código relevante? (src/, paquetes, migraciones — más que scaffolding vacío)
 
 - **Sin docs ni código relevante** → **MODO NUEVO**: seguí con la Fase 1.
-- **Hay docs y/o código** → **MODO EXISTENTE** — ⚠️ aún NO implementado (llega en S03: lectura de lo existente, detección de huecos, diffs confirmados, idempotencia). Declaralo honestamente, mostrá QUÉ lo activó (qué docs/código encontraste) y frená. NO improvises el modo existente ni generes docs por encima de lo que hay.
+- **Hay docs y/o código** → **MODO EXISTENTE**: seguí con la Fase 1-E.
+- **Ante la DUDA** (docs delgados, un README stub, scaffolding a medias) → **MODO EXISTENTE**, siempre: es el modo seguro — su inventario revela lo delgado como hueco; el error inverso (mandar a modo nuevo un repo con contenido) no tiene vuelta atrás. La clasificación además NUNCA es la única protección: ver la Guardia de Escritura Universal de la Fase 2.
 
 ## FASE 1 — Entrevista guiada (modo nuevo)
 
@@ -47,9 +48,24 @@ Proponé sesiones de trabajo ordenadas por dependencia (cimientos → núcleo �
 
 Presentale el plan completo al humano y ajustalo con su feedback ANTES de escribir un solo archivo.
 
+## FASE 1-E — Modo existente (huecos + diffs confirmados)
+
+El principio: **lo que el humano ya escribió está firmado**. Este modo completa, no re-escribe; y todo cambio pasa por sus ojos antes de tocar el disco.
+
+1. **Inventario ANTES de preguntar.** Leé TODO lo que hay: `docs/` completo, README, specs, ADRs, planes — y el código relevante (estructura, stack, migraciones). Las decisiones estructurales visibles en el código son **candidatas a decisión**, no decisiones: un default de scaffolding no es una elección — en el paso 3 el humano confirma cuáles fueron decididas de verdad (esas van a ADR) y cuáles son solo defaults heredados (esas son huecos de decisión). Cerrá el inventario con una síntesis: qué existe y qué dice.
+2. **Detección de huecos contra el contrato.** Compará lo que hay con la estructura Y los formatos de la Fase 2 (fichas, ADRs, frontmatter de referencias — el contrato entero, no solo el árbol). Para cada pieza, clasificá: ✅ existe y cumple · 🟠 existe incompleta (decí exactamente qué le falta — p.ej. «PLAN tiene sesiones sin criterio verificable») · 🔴 falta. Si dudás de si algo es hueco, listalo como **duda para el humano**, no como hueco firme. Los docs en otro formato NO se convierten sin pedirlo: se reportan como están.
+3. **Informe de huecos al humano, ANTES de tocar nada.** Presentá inventario, huecos y dudas con ubicación — e incluí la **verificación de procedencia**: ¿qué de lo encontrado reconocés como TUYO/firmado? Lo que el humano no reconozca (scaffolding, docs generados por una máquina, restos de otro proceso) NO está firmado: se trata como material a revisar, nunca como contrato. **Default ante el silencio**: pieza sin respuesta clara de procedencia = NO firmada. El humano decide qué huecos completar en esta corrida — descartar un hueco queda como decisión, no como olvido.
+4. **Entrevista SOLO de lo faltante.** Misma mecánica del modo nuevo (síntesis confirmada por etapa; decisiones con opciones y tradeoffs) pero acotada a los huecos elegidos. JAMÁS re-litigues la SUSTANCIA ya decidida y reconocida como firmada: si VISION define el propósito, citalo. Los DEFECTOS DE FORMA de un doc firmado (un criterio sin método de verificación, una sección vacía) sí son huecos — y el borde es este: **la sustancia se conserva, la formulación se propone**. Un criterio vago («que funcione bien») no se re-pregunta desde cero: proponés su versión verificable como diff, citando la intención original, y el humano la firma o la rechaza en el paso 5.
+5. **Generación con diff confirmado POR ARCHIVO.** Para cada archivo a crear o modificar: mostrá el diff (contenido completo si es nuevo), preguntá, y aplicá SOLO con un sí explícito. Un no = ese cambio se descarta entero y el original queda INTACTO. Nada de lotes: archivo por archivo, sin excepción.
+6. **Idempotencia.** Sin huecos confirmados por el humano (o todos descartados) → declaralo — «el contrato está completo, cero cambios» — y terminá SIN escribir un solo byte. Re-correr este comando sobre un repo completo tiene que dejar `git status` limpio: la garantía dura es de ESCRITURA (cero cambios sin sí explícito); el juicio de qué es hueco lo filtra el humano en el paso 3.
+
+Los pasos 5 y 6 definen la MECÁNICA de confirmación; la generación en sí ocurre en la **Fase 2** — único punto de escritura de ambos modos, donde viven los formatos-contrato y la Guardia de Escritura Universal (que ejecuta tu paso 5 archivo por archivo). De la Fase 2 seguís a la Fase 3 (cierre), igual que el modo nuevo.
+
 ## FASE 2 — Generación (recién acá se escribe)
 
-Con la entrevista cerrada y el plan ajustado, generá en el repo — markdown, en el idioma del usuario, todo fechado:
+**GUARDIA DE ESCRITURA UNIVERSAL — rige en TODOS los modos, sin depender de la Fase 0:** antes de escribir CUALQUIER archivo, comprobá si ya existe. Si existe — aunque estés en modo nuevo, aunque la Fase 0 haya dicho «repo vacío» — se aplica el diff confirmado del paso 5 de la Fase 1-E: mostrás el diff, preguntás, y sin un sí explícito no se toca. El modo nuevo solo CREA archivos; pisar es siempre un acto confirmado. Esta guardia es la red de seguridad si la detección de modo se equivocó.
+
+Con la entrevista cerrada y el plan ajustado (en modo existente: con los huecos elegidos y su mini-entrevista hecha), generá en el repo — markdown, en el idioma del usuario, todo fechado:
 
 ```
 docs/
@@ -79,8 +95,10 @@ Antes de escribir, mostrá el árbol de lo que vas a crear. Escribí los archivo
 
 ## REGLAS DE ORO
 
-- Cero archivos escritos antes de que el humano confirme el plan (Fase 1, Etapa 4).
+- Cero archivos escritos antes de la confirmación humana que corresponda al modo: plan confirmado (Etapa 4) en modo nuevo · diff confirmado por archivo (Fase 1-E, paso 5) en modo existente.
+- La Guardia de Escritura Universal no se apaga nunca: archivo existente = diff confirmado, en cualquier modo.
 - Cero decisiones inventadas: lo no decidido es una pendiente explícita con dueño.
 - Cada sesión del plan sale con ≥1 criterio verificable, o el plan no se entrega.
-- Re-correr `/documentar` sobre lo ya generado = modo existente (Fase 0 lo detecta): actualización con diffs confirmados, jamás regeneración desde cero.
+- Re-correr `/documentar` sobre lo ya generado = modo existente: actualización con diffs confirmados, jamás regeneración desde cero. La garantía dura es de escritura: **sin un sí explícito no hay cambios** — por eso una re-corrida donde el humano no confirma nada termina con `git status` limpio, y así se verifica la idempotencia.
+- En modo existente, un rechazo del humano descarta el cambio ENTERO: nunca apliques «la parte que seguro quería».
 - El contrato de formato con el audit-tracker no se negocia: fichas 🎯🛠️✅📚⛓️, referencias con `triggers` y fecha, ADRs con tradeoffs.
