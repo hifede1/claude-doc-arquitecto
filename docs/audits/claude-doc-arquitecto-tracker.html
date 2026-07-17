@@ -363,7 +363,7 @@
 'use strict';
 /* ============ DATOS (editar SOLO esto en actualizaciones normales) ============ */
 const LAST_AUDIT = '2026-07-17';
-const CLOSED_COUNT = 7;
+const CLOSED_COUNT = 9;
 const REPO = 'https://github.com/hifede1/claude-doc-arquitecto';
 
 const DATA = [
@@ -411,18 +411,16 @@ const DATA = [
       ] },
   ]},
   { zona: 'Integración y cierre', bloques: [
-    { id: 's05', nombre: 'S05 — Pipeline e2e + publicación', estado: 'pendiente', issue: 5,
-      plante: 'La promesa central es «pipeline sin traducción»: la salida de /documentar es la entrada de /audit-tracker. S05 lo PRUEBA de punta a punta y publica el plugin.',
-      metodo: 'En el repo de prueba de S02: /documentar → /auditar-docs → /audit-tracker en secuencia → verificar consumo sin adaptación → README final → repo público + tag v1.0.0 → instalación remota en máquina limpia.',
-      resultados: ['/audit-tracker consume los docs generados sin adaptación manual (verificación: corrida en secuencia).',
-        'Decisiones preguntadas con opciones y tradeoffs en el transcript — cero inventadas (verificación: revisión).',
-        'Instalación remota funciona desde GitHub (verificación: máquina limpia).'],
+    { id: 's05', nombre: 'S05 — Pipeline e2e + publicación', estado: 'curso', issue: 5,
+      plante: 'IMPLEMENTADA, en PR #12 (CI verde) esperando firma. El e2e adversarial (workflow de 6 agentes) refutó el criterio 4: /documentar no exponía triggers en el catálogo ni catalogaba business/ → audit-tracker no podía consumir sin adaptación. ARREGLADO en la fuente y re-verificado (sinAdaptacionManual=true). Criterio 5 ✅ (6 ADRs pasan). Queda la decisión de publicación (ADR 006, dueño Fede).',
+      metodo: 'Al firmar #12: merge → re-auditoría (C4 y C5 a verde). Publicación (repo público + tag v1.0.0 + instalación remota en máquina limpia) es el ADR 006 — decisión de Fede, se ejecuta cuando él la tome.',
+      resultados: ['/audit-tracker consume los docs generados sin adaptación manual ✅ (verificado por workflow adversarial + re-verificación tras el arreglo del gap de referencias).',
+        'Cero decisiones inventadas ✅ (los 6 ADRs mapean a la FICHA firmada o son pendientes con dueño).',
+        'Instalación remota funciona desde GitHub (verificación: máquina limpia — bloqueado hasta ADR 006).'],
       refs: [{ t: 'FICHA §6 (criterios 4 y 5)', freshref: 'ref-ficha' }],
       pends: [
-        { id: 's05-e2e', txt: 'Pipeline e2e: documentar → auditar-docs → audit-tracker', est: 0.4 },
-        { id: 's05-readme', txt: 'README final (uso real de ambos comandos)', est: 0.2 },
-        { id: 's05-publico', txt: 'Pasar el repo a público + tag v1.0.0', est: 0.2 },
-        { id: 's05-instal', txt: 'Instalación remota verificada en máquina limpia', est: 0.2 },
+        { id: 's05-publico', txt: 'DECISIÓN DE FEDE (ADR 006): pasar el repo a público + tag v1.0.0', est: 0.2 },
+        { id: 's05-instal', txt: 'Instalación remota verificada en máquina limpia (tras el pase a público)', est: 0.2 },
       ] },
   ]},
 ];
@@ -445,6 +443,7 @@ const PLAN = [
 ];
 
 const CHANGELOG = [
+  { fecha: '2026-07-17', txt: 'S05 implementada vía /proximo-encargo con verificación por workflow adversarial (6 agentes, 255k tokens). El e2e REFUTÓ el criterio 4: /documentar no exponía triggers en el catálogo de referencias ni catalogaba business/ → audit-tracker no podía consumir sin adaptación manual. Arreglado en la Fase 2 del comando (catálogo cubre references/ + business/ con todos los campos) y re-verificado. Criterio 4 y 5 clavados (CLOSED_COUNT 7→9). PR #12 con CI verde ESPERANDO FIRMA. Pendiente último: ADR 006 (repo público + v1.0.0), decisión de Fede. Hallazgo para Fede: contradicción de alcance sobre CI en los docs de prueba, cazada por /auditar-docs sola.' },
   { fecha: '2026-07-17', txt: 'S03 mergeada (PR #9 firmado por Fede) — sus 4 pends de implementación a verde (CLOSED_COUNT 3→7); queda s03-corrida (criterio 2, rechazo humano). S04 implementada vía /proximo-encargo: corrida CIEGA verificó el criterio 3 (ambos defectos sembrados detectados con file:línea); PR #10 con CI verde y conflicto de versión resuelto (0.4.0), ESPERANDO FIRMA. Gotcha registrado: otra sesión cambia la cuenta gh activa — switchear en la misma cadena que el push.' },
   { fecha: '2026-07-17', txt: 'S02 HECHA y verificada: corrida real de /documentar en repo vacío (entrevista completa con Fede, generación de docs/, escéptico independiente SOBREVIVE, 3 hallazgos menores corregidos). Criterios C1 y C5 clavados. Issue #2 cerrado con informe; CLOSED_COUNT 2→3. Hallazgo nuevo: la caché actualizada no aplica a sesiones abiertas (reinicio requerido) — documentar en README (S05). Próxima: S03.' },
   { fecha: '2026-07-17', txt: 'Re-auditoría (loop /orquestar, encargo #2): PR #1 firmado por Fede (pedido explícito en sesión — procedencia en el comentario de firma) y mergeado con CI verde; caché del plugin actualizada a v0.2.0 y verificada en código. s02-firma y s02-cache → verde (CLOSED_COUNT 0→2). Queda s02-corrida: la corrida de verificación del criterio 1, en curso.' },
@@ -511,13 +510,13 @@ const TESTS = {
     { f: '/documentar modo nuevo: detección → entrevista → docs/ generado', pill: 'verde', ev: 'Corrida real 2026-07-17 en repo vacío + escéptico independiente SOBREVIVE (informe en issue #2)' },
     { f: '/documentar modo existente: huecos → diffs → idempotencia', pill: 'ambar', ev: 'Implementación mergeada (PR #9) y verificada por escéptico en 3 rondas; corrida real del criterio 2 pendiente (el rechazo es humano)' },
     { f: '/auditar-docs sobre docs con defectos sembrados', pill: 'ambar', ev: 'Corrida CIEGA detectó ambos defectos con file:línea (informe en PR #10) — verde al mergear' },
-    { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'rojo', ev: 'Futuro S05 (issue #5)' },
+    { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'ambar', ev: 'Verificado por workflow adversarial en S05 (criterio 4): refutado → gap de referencias arreglado en la fuente → re-verificado limpio. Verde al mergear PR #12' },
   ],
   crit: [
     { c: 'C1 — repo vacío → estructura completa, ≥1 criterio verificable por sesión', prot: 'Corrida protocolizada 2026-07-17 + escéptico (informe en issue #2)', estado: 'clavado' },
     { c: 'C2 — docs existentes: nada se pisa sin confirmación', prot: 'Implementación mergeada y refutada 3 rondas; corrida con rechazo humano pendiente (pend s03-corrida)', estado: 'deuda' },
     { c: 'C3 — contradicción y criterio no verificable sembrados: detectados con ubicación', prot: 'Corrida ciega 2026-07-17 (informe en PR #10) — verde al mergear', estado: 'deuda' },
-    { c: 'C4 — audit-tracker consume la salida sin adaptación', prot: 'Corrida en secuencia (S05)', estado: 'futuro' },
+    { c: 'C4 — audit-tracker consume la salida sin adaptación', prot: 'Workflow adversarial S05 (6 agentes): refutó, se arregló el gap de referencias en la fuente, re-verificado sinAdaptacionManual=true (PR #12)', estado: 'clavado' },
     { c: 'C5 — cero decisiones inventadas en la entrevista', prot: 'Transcript de la corrida del 2026-07-17 (issue #2); se re-confirma en S05', estado: 'clavado' },
   ],
 };
@@ -529,9 +528,9 @@ const REFS = [
   { id: 'ref-plugins', tema: 'Plugins y marketplaces de Claude Code', fecha: '2026-07-13', frescura: 'fresca',
     path: 'claude-audit-tracker/docs/references/claude-code-plugins.md (repo hermano)', linea: 'Anatomía, instalación, caché y gotchas de distribución — verificada empíricamente.',
     triggers: ['plugin', 'marketplace', 'instalación', 'namespace', 'caché'], usa: 'S01 (hecho) · issue #2 (paso de caché)' },
-  { id: 'ref-auditoria', tema: 'Auditoría de documentación — heurísticas de las 6 dimensiones', fecha: null, frescura: 'faltante',
-    path: 'docs/references/auditoria-de-docs.md (NO EXISTE)', linea: 'Territorio nuevo de S04 sin referencia: generarla ANTES de ese encargo, con triggers y fecha.',
-    triggers: ['auditoría', 'contradicciones', 'criterios verificables', 'drift'], usa: 'Issue #4 — pend s04-ref' },
+  { id: 'ref-auditoria', tema: 'Auditoría de documentación — heurísticas de las 6 dimensiones', fecha: '2026-07-17', frescura: 'fresca',
+    path: 'docs/references/auditoria-de-docs.md', linea: 'Heurísticas por dimensión, severidades y formato del informe de /auditar-docs. Generada en S04 (era la faltante 🔴 del catálogo).',
+    triggers: ['auditoría', 'contradicciones', 'criterios verificables', 'drift', 'severidad'], usa: 'S04 (hecha) — embebida en el comando auditar-docs' },
 ];
 
 /* ============ LÓGICA DE RENDER (no tocar en actualizaciones normales) ============ */
@@ -622,7 +621,7 @@ function renderMapa() {
     { id: 's02', nm: 'S02 Modo nuevo', d: 'verificada (issue #2)', arrow: '/orquestar toma #3', who: 'auto' },
     { id: 's03', nm: 'S03 Modo existente', d: 'mergeada · corrida pendiente', arrow: 'ejecutor tomó #4', who: 'auto' },
     { id: 's04', nm: 'S04 /auditar-docs', d: 'PR #10 espera firma', arrow: 'firma de Fede', who: 'humano' },
-    { id: 's05', nm: 'S05 Cierre', d: 'e2e + público', arrow: 'tag', who: 'humano' },
+    { id: 's05', nm: 'S05 Cierre', d: 'e2e verde · PR #12', arrow: 'firma + decisión ADR 006', who: 'humano' },
     { id: null, nm: 'v1.0.0', d: 'plugin publicado', arrow: null },
   ];
   $('#mapflow').innerHTML = nodes.map(n => {
