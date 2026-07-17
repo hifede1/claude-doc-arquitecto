@@ -1,7 +1,7 @@
 # Ficha de diseño: doc-arquitecto
 
-> Estado: 🔵 Lista para construir (firmada por Fede el 2026-07-17)
-> Diseñada: 2026-07-17 · Próxima sesión de construcción: S01 — Esqueleto
+> Estado: 🟠 En construcción (firmada por Fede el 2026-07-17)
+> Diseñada: 2026-07-17 · S01 ✅ · S02 en validación · Próxima sesión de construcción: S03 — modo existente
 
 ## 1. Propósito
 
