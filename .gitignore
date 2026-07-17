@@ -3,3 +3,6 @@ node_modules/
 *.log
 .env
 .env.*
+
+# estado local del loop orquestado (una máquina, no se commitea)
+.claude/audit-tracker-state.json
