@@ -2,7 +2,9 @@
 
 Formato: una entrada por versión del plugin. El detalle fino vive en los mensajes de commit.
 
-## v0.5.0 — 2026-07-17
+## v1.0.0 — 2026-07-17 — 🎉 release
+Las cinco sesiones del plan completas y verificadas. El plugin queda funcional de punta a punta: `/documentar` (modo nuevo + existente) y `/auditar-docs` (seis dimensiones), con el pipeline hacia `/audit-tracker` verificado sin traducción. Repo público, tag `v1.0.0`.
+
 - **S05 — Integración y cierre (pipeline e2e)**: la verificación adversarial del criterio 4 (audit-tracker consume la salida sin adaptación manual) encontró dos gaps bloqueantes en la Fase 2 de `/documentar` — el catálogo de `references/` no exponía los `triggers` y `business/` no se cataloga ni llevaba frontmatter machine-readable. **Arreglado en la fuente**: el catálogo ahora cubre AMBAS mitades (references/ = CÓMO, business/ = QUÉ) con todos los campos que el tracker consume (tema · qué resuelve · fecha · triggers con valores · quién la usa · frescura pill 🟢🟠🔴 · path), y `business/` lleva frontmatter `tema`/`fecha`/`triggers`/`resumen`. Re-verificado: pipeline sin traducción confirmado. README final. La publicación (repo público + tag v1.0.0) es el ADR 006 pendiente — decisión de Fede.
 
 ## v0.4.0 — 2026-07-17
