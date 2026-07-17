@@ -1,6 +1,6 @@
 # doc-arquitecto — plugin de Claude Code
 
-> 🚧 **Estado: S01 — Esqueleto.** Los comandos están instalables pero son placeholders; la funcionalidad llega en S02–S05. El contrato de diseño completo vive en [`docs/FICHA.md`](docs/FICHA.md).
+> 🚧 **Estado: S02 — `/documentar` modo nuevo implementado** (pendiente de verificación en repo de prueba). El modo existente llega en S03 y `/auditar-docs` en S04. El contrato de diseño completo vive en [`docs/FICHA.md`](docs/FICHA.md).
 
 Produce y audita la documentación de un proyecto para que sea un **contrato completo, coherente y verificable** — el plano que el [audit-tracker](https://github.com/hifede1/claude-audit-tracker) necesita para auditar la obra.
 
