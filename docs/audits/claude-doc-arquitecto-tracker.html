@@ -295,7 +295,7 @@
       <h3>Cliente</h3>
       <ul>
         <li><b>Claude Code CLI</b> — ejecuta los comandos; los plugins cargan al inicio de sesión, namespaceados (<code>/doc-arquitecto:documentar</code>).</li>
-        <li><b>Sistema de plugins</b> — marketplace <code>fede-tools</code> (source: directorio local). <span class="warntag">⚠️ La caché instalada NO se sincroniza sola: hoy sirve la v0.1.0 placeholder.</span></li>
+        <li><b>Sistema de plugins</b> — marketplace <code>fede-tools</code> (source: directorio local). Caché instalada: v0.2.0 (actualizada 2026-07-17). <span class="warntag">⚠️ Gotcha permanente: la caché NO se sincroniza sola — actualizar tras cada cambio de comandos.</span></li>
       </ul>
     </div>
     <div class="layer">
@@ -363,7 +363,7 @@
 'use strict';
 /* ============ DATOS (editar SOLO esto en actualizaciones normales) ============ */
 const LAST_AUDIT = '2026-07-17';
-const CLOSED_COUNT = 0;
+const CLOSED_COUNT = 2;
 const REPO = 'https://github.com/hifede1/claude-doc-arquitecto';
 
 const DATA = [
@@ -384,8 +384,6 @@ const DATA = [
         'Cero decisiones inventadas (verificación: transcript de la corrida).'],
       refs: [{ t: 'FICHA §3 y §6', freshref: 'ref-ficha' }],
       pends: [
-        { id: 's02-firma', txt: 'Firmar PR #1 (✅ validado) y mergear', est: 0.1 },
-        { id: 's02-cache', txt: 'Actualizar plugin instalado a v0.2.0 (la caché no se sincroniza sola)', est: 0.1 },
         { id: 's02-corrida', txt: 'Corrida de verificación del criterio 1 en repo de prueba vacío', est: 0.3 },
       ] },
     { id: 's03', nombre: 'S03 — Modo existente (huecos + diffs)', estado: 'pendiente', issue: 3,
@@ -435,7 +433,6 @@ const DATA = [
 ];
 
 const DEBT = [
-  'Drift máquina↔repo: la caché instalada del plugin sirve la v0.1.0 placeholder — corrés /documentar hoy y ejecuta el esqueleto (cierra con el pend s02-cache).',
   'Deuda de verificación: criterio 1 de la FICHA sin corrida real (pend s02-corrida). S02 puede estar «escrita» y romperse en la primera entrevista real.',
   'Repo privado: la instalación remota para terceros falla hasta S05 (decisión aceptada, no olvidada).',
   'CI sin checks de contenido de los comandos (solo estructura) — deuda menor aceptada para un repo de prompts.',
@@ -457,6 +454,7 @@ const PLAN = [
 ];
 
 const CHANGELOG = [
+  { fecha: '2026-07-17', txt: 'Re-auditoría (loop /orquestar, encargo #2): PR #1 firmado por Fede (pedido explícito en sesión — procedencia en el comentario de firma) y mergeado con CI verde; caché del plugin actualizada a v0.2.0 y verificada en código. s02-firma y s02-cache → verde (CLOSED_COUNT 0→2). Queda s02-corrida: la corrida de verificación del criterio 1, en curso.' },
   { fecha: '2026-07-17', txt: 'Auditoría inicial y tracker v1. S01 verde (verificado). S02 en PR #1 esperando firma. Repo privado creado en GitHub, cola de despacho publicada (issues #2–#5), calibración: sesiones · 1 máquina · mixto SDD · loop orquestado · todo se firma.' },
 ];
 
