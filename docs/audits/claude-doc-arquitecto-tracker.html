@@ -363,7 +363,7 @@
 'use strict';
 /* ============ DATOS (editar SOLO esto en actualizaciones normales) ============ */
 const LAST_AUDIT = '2026-07-17';
-const CLOSED_COUNT = 3;
+const CLOSED_COUNT = 7;
 const REPO = 'https://github.com/hifede1/claude-doc-arquitecto';
 
 const DATA = [
@@ -384,24 +384,21 @@ const DATA = [
         'Cero decisiones inventadas ✅ (transcript: síntesis confirmadas + ADR pendiente con dueño).'],
       refs: [{ t: 'FICHA §3 y §6', freshref: 'ref-ficha' }],
       pends: [] },
-    { id: 's03', nombre: 'S03 — Modo existente (huecos + diffs)', estado: 'pendiente', issue: 3,
-      plante: 'Hoy el comando frena honestamente ante un repo con docs o código. S03 le da la otra mitad: detectar huecos y completarlos SIN pisar nada — un documentador que pisa lo escrito destruye el contrato que debía cuidar.',
-      metodo: 'Inventario de lo existente → huecos contra el contrato → entrevista SOLO de lo faltante → diff confirmado por archivo → idempotencia (re-corrida = cero escrituras). v0.3.0 + CHANGELOG.',
+    { id: 's03', nombre: 'S03 — Modo existente (huecos + diffs)', estado: 'curso', issue: 3,
+      plante: 'IMPLEMENTADA y mergeada (PR #9, firmado por Fede): Fase 1-E completa + Guardia de Escritura Universal (archivo existente = diff confirmado en CUALQUIER modo) + tie-break de Fase 0 al modo seguro. 3 rondas de escéptico (2 refutaciones legítimas corregidas → SOBREVIVE). Falta la corrida real del criterio 2.',
+      metodo: 'Corrida de verificación: sembrar docs en un repo de prueba → correr /documentar (v0.3.0+, con caché actualizada y sesión reiniciada) → RECHAZAR un diff propuesto (acto humano: Fede) → verificar con git diff que el original quedó intacto → re-corrida sobre repo completo = git status limpio.',
       resultados: ['Rechazo de un diff deja el original INTACTO (verificación: git diff tras rechazar = vacío).',
         'No re-pregunta lo documentado (verificación: transcript).',
         'Re-corrida sobre repo completo = cero escrituras (verificación: git status limpio).'],
       refs: [{ t: 'FICHA §3 (modo existente)', freshref: 'ref-ficha' }],
       pends: [
-        { id: 's03-inventario', txt: 'Inventario de docs/código existentes en Fase 0', est: 0.2 },
-        { id: 's03-huecos', txt: 'Detección de huecos contra el contrato', est: 0.3 },
-        { id: 's03-diffs', txt: 'Completado con diffs confirmados por archivo', est: 0.3 },
-        { id: 's03-idem', txt: 'Idempotencia verificada (re-corrida sin escrituras)', est: 0.2 },
+        { id: 's03-corrida', txt: 'Corrida de verificación del criterio 2 (rechazo humano + git diff intacto + idempotencia)', est: 0.3 },
       ] },
   ]},
   { zona: '/auditar-docs', bloques: [
-    { id: 's04', nombre: 'S04 — Las seis dimensiones de auditoría', estado: 'pendiente', issue: 4,
-      plante: 'El documentador no corrige su propio examen: /auditar-docs audita el plano. Sin él, hay quien escribe el contrato pero nadie que lo audite. Tratamiento SDD ligero: hay decisiones de diseño reales (heurísticas de contradicción, formato del informe).',
-      metodo: 'Generar ANTES la referencia auditoria-de-docs.md → /sdd-ff para fijar heurísticas y formato → implementar las 6 dimensiones → informe file:línea → arreglos UNO POR UNO con confirmación. v0.4.0.',
+    { id: 's04', nombre: 'S04 — Las seis dimensiones de auditoría', estado: 'curso', issue: 4,
+      plante: 'IMPLEMENTADA, en PR #10 (CI verde, conflicto de versión resuelto a 0.4.0) ESPERANDO FIRMA. La corrida CIEGA ya verificó el criterio 3: un ejecutor de contexto limpio detectó ambos defectos sembrados con file:línea exactos, sin saber que existían — y cazó además el drift inducido por el sembrado.',
+      metodo: 'Al firmar #10: merge → re-auditoría (criterio 3 a verde) → actualizar caché a v0.4.0 + reiniciar sesión. Deuda declarada: sub-criterio «arreglo rechazado NO se aplica» requiere rechazo humano (corrida con Fede, como S02/S03).',
       resultados: ['Contradicción sembrada detectada y reportada con file:línea (verificación: repo de prueba con el defecto).',
         'Criterio no verificable sembrado detectado (verificación: mismo repo).',
         'Arreglo rechazado NO se aplica (verificación: rechazar uno y comprobar).'],
@@ -448,6 +445,7 @@ const PLAN = [
 ];
 
 const CHANGELOG = [
+  { fecha: '2026-07-17', txt: 'S03 mergeada (PR #9 firmado por Fede) — sus 4 pends de implementación a verde (CLOSED_COUNT 3→7); queda s03-corrida (criterio 2, rechazo humano). S04 implementada vía /proximo-encargo: corrida CIEGA verificó el criterio 3 (ambos defectos sembrados detectados con file:línea); PR #10 con CI verde y conflicto de versión resuelto (0.4.0), ESPERANDO FIRMA. Gotcha registrado: otra sesión cambia la cuenta gh activa — switchear en la misma cadena que el push.' },
   { fecha: '2026-07-17', txt: 'S02 HECHA y verificada: corrida real de /documentar en repo vacío (entrevista completa con Fede, generación de docs/, escéptico independiente SOBREVIVE, 3 hallazgos menores corregidos). Criterios C1 y C5 clavados. Issue #2 cerrado con informe; CLOSED_COUNT 2→3. Hallazgo nuevo: la caché actualizada no aplica a sesiones abiertas (reinicio requerido) — documentar en README (S05). Próxima: S03.' },
   { fecha: '2026-07-17', txt: 'Re-auditoría (loop /orquestar, encargo #2): PR #1 firmado por Fede (pedido explícito en sesión — procedencia en el comentario de firma) y mergeado con CI verde; caché del plugin actualizada a v0.2.0 y verificada en código. s02-firma y s02-cache → verde (CLOSED_COUNT 0→2). Queda s02-corrida: la corrida de verificación del criterio 1, en curso.' },
   { fecha: '2026-07-17', txt: 'Auditoría inicial y tracker v1. S01 verde (verificado). S02 en PR #1 esperando firma. Repo privado creado en GitHub, cola de despacho publicada (issues #2–#5), calibración: sesiones · 1 máquina · mixto SDD · loop orquestado · todo se firma.' },
@@ -511,14 +509,14 @@ const TESTS = {
   flows: [
     { f: 'Instalación: marketplace → caché → comando namespaceado aparece y ejecuta', pill: 'ambar', ev: 'Verificado A MANO hoy (corrida real en sesión); sin check automatizado' },
     { f: '/documentar modo nuevo: detección → entrevista → docs/ generado', pill: 'verde', ev: 'Corrida real 2026-07-17 en repo vacío + escéptico independiente SOBREVIVE (informe en issue #2)' },
-    { f: '/documentar modo existente: huecos → diffs → idempotencia', pill: 'rojo', ev: 'Futuro S03 (issue #3)' },
-    { f: '/auditar-docs sobre docs con defectos sembrados', pill: 'rojo', ev: 'Futuro S04 (issue #4)' },
+    { f: '/documentar modo existente: huecos → diffs → idempotencia', pill: 'ambar', ev: 'Implementación mergeada (PR #9) y verificada por escéptico en 3 rondas; corrida real del criterio 2 pendiente (el rechazo es humano)' },
+    { f: '/auditar-docs sobre docs con defectos sembrados', pill: 'ambar', ev: 'Corrida CIEGA detectó ambos defectos con file:línea (informe en PR #10) — verde al mergear' },
     { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'rojo', ev: 'Futuro S05 (issue #5)' },
   ],
   crit: [
     { c: 'C1 — repo vacío → estructura completa, ≥1 criterio verificable por sesión', prot: 'Corrida protocolizada 2026-07-17 + escéptico (informe en issue #2)', estado: 'clavado' },
-    { c: 'C2 — docs existentes: nada se pisa sin confirmación', prot: 'Corrida con docs sembrados + rechazo (S03)', estado: 'futuro' },
-    { c: 'C3 — contradicción y criterio no verificable sembrados: detectados con ubicación', prot: 'Repo de prueba con defectos plantados (S04)', estado: 'futuro' },
+    { c: 'C2 — docs existentes: nada se pisa sin confirmación', prot: 'Implementación mergeada y refutada 3 rondas; corrida con rechazo humano pendiente (pend s03-corrida)', estado: 'deuda' },
+    { c: 'C3 — contradicción y criterio no verificable sembrados: detectados con ubicación', prot: 'Corrida ciega 2026-07-17 (informe en PR #10) — verde al mergear', estado: 'deuda' },
     { c: 'C4 — audit-tracker consume la salida sin adaptación', prot: 'Corrida en secuencia (S05)', estado: 'futuro' },
     { c: 'C5 — cero decisiones inventadas en la entrevista', prot: 'Transcript de la corrida del 2026-07-17 (issue #2); se re-confirma en S05', estado: 'clavado' },
   ],
@@ -622,8 +620,8 @@ function renderMapa() {
     { id: null, nm: 'FICHA firmada', d: 'contrato de diseño', arrow: 'S01 construye', who: 'auto' },
     { id: 's01', nm: 'S01 Esqueleto', d: 'instalable', arrow: 'PR #1 firmado y mergeado', who: 'humano' },
     { id: 's02', nm: 'S02 Modo nuevo', d: 'verificada (issue #2)', arrow: '/orquestar toma #3', who: 'auto' },
-    { id: 's03', nm: 'S03 Modo existente', d: 'pendiente', arrow: '/orquestar toma #4', who: 'auto' },
-    { id: 's04', nm: 'S04 /auditar-docs', d: 'SDD ligero', arrow: 'firma de Fede en cada PR', who: 'humano' },
+    { id: 's03', nm: 'S03 Modo existente', d: 'mergeada · corrida pendiente', arrow: 'ejecutor tomó #4', who: 'auto' },
+    { id: 's04', nm: 'S04 /auditar-docs', d: 'PR #10 espera firma', arrow: 'firma de Fede', who: 'humano' },
     { id: 's05', nm: 'S05 Cierre', d: 'e2e + público', arrow: 'tag', who: 'humano' },
     { id: null, nm: 'v1.0.0', d: 'plugin publicado', arrow: null },
   ];
