@@ -2,6 +2,9 @@
 
 Formato: una entrada por versión del plugin. El detalle fino vive en los mensajes de commit.
 
+## v0.4.0 — 2026-07-17
+- **S04 — `/auditar-docs`**: las seis dimensiones de auditoría (completitud, contradicciones, criterios no verificables, decisiones sin registrar, referencias faltantes/vencidas, drift doc↔doc) con heurísticas operativas embebidas, severidades 🔴🟠🟡⚪, informe por dimensión con `file:línea` (dimensión limpia se declara), y arreglos uno por uno con diff confirmado — los que implicarían inventar se marcan «requiere decisión humana» y se preguntan con opciones y tradeoffs. Diseño fijado en `docs/references/auditoria-de-docs.md` (nueva, con triggers y fecha).
+
 ## v0.3.0 — 2026-07-17
 - **S03 — `/documentar` modo existente**: nueva FASE 1-E — inventario antes de preguntar, detección de huecos contra el contrato (incluye decisiones visibles en el código sin ADR), informe de huecos al humano antes de tocar nada, entrevista SOLO de lo faltante (lo documentado está firmado y no se re-litiga), generación con diff confirmado POR ARCHIVO (un rechazo descarta el cambio entero), e idempotencia (repo completo = no-op verificable con `git status`). Los formatos de la Fase 2 se reusan: cero duplicación del contrato.
 
