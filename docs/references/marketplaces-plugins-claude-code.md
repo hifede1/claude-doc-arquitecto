@@ -45,8 +45,13 @@ Claude Code de dónde traer ese plugin ([tabla oficial](https://code.claude.com/
 | Ruta local relativa | `string` | `"./plugins/mi-plugin"` |
 | GitHub (plugin en la **raíz** del repo) | `object` | `{ "source": "github", "repo": "owner/repo" }` |
 | Git URL (cualquier host) | `object` | `{ "source": "url", "url": "https://gitlab.com/…" }` |
-| **Subdirectorio de un repo git** | `object` | `{ "source": "git-subdir", "url": "owner/repo", "path": "sub/dir" }` |
+| **Subdirectorio de un repo git** | `object` | `{ "source": "git-subdir", "url": "https://github.com/owner/repo.git", "path": "sub/dir" }` ⚠️ |
 | npm | `object` | `{ "source": "npm", "package": "@org/plugin" }` |
+
+> ⚠️ **La fila de `git-subdir` diverge de la tabla oficial a propósito.** La doc de Anthropic
+> usa el shorthand `"url": "owner/repo"`; acá va la **URL HTTPS completa** porque el shorthand
+> rompe la instalación en máquinas sin SSH. No es un error de esta tabla: es una corrección
+> verificada empíricamente. El porqué está en el ⚠️ de la sección siguiente.
 
 Un mismo `marketplace.json` **puede mezclar** entradas locales y externas en el mismo array,
 sin restricción (confirmado en la doc). Así queda el catálogo `fede-tools`: `audit-tracker`
