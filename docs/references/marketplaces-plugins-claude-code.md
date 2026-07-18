@@ -9,6 +9,7 @@ fuentes:
   - https://code.claude.com/docs/en/plugin-marketplaces.md#marketplace-schema (schema del marketplace)
   - https://code.claude.com/docs/en/plugin-marketplaces.md#version-resolution-and-release-channels (resolución de versión)
   - hifede1/claude-doc-arquitecto#20 (decisión de topología del catálogo único fede-tools, firmada por Fede el 2026-07-18)
+  - Verificación empírica (CLI Claude Code 2.1.214, 2026-07-18): git-subdir con shorthand `owner/repo` clona por SSH y falla sin SSH configurado; con URL HTTPS explícita instala OK
 ---
 
 # Marketplaces y fuentes de plugins en Claude Code — el CÓMO destilado
@@ -62,7 +63,7 @@ un *sparse/partial clone* de solo ese subdirectorio.
   "name": "doc-arquitecto",
   "source": {
     "source": "git-subdir",
-    "url": "hifede1/claude-doc-arquitecto",
+    "url": "https://github.com/hifede1/claude-doc-arquitecto.git",
     "path": "plugins/doc-arquitecto",
     "ref": "main"
   },
@@ -70,11 +71,18 @@ un *sparse/partial clone* de solo ese subdirectorio.
 }
 ```
 
+⚠️ **Usá la URL HTTPS completa (`https://…​.git`), NO el shorthand `owner/repo`.** Verificado
+empíricamente (CLI 2.1.214): en `git-subdir`, el shorthand `owner/repo` lo resuelve el CLI a
+**SSH** (`git@github.com:…`) y el `install` **falla** con «Host key verification failed» en
+cualquier máquina sin SSH configurado. El `marketplace add` del shorthand sí cae a HTTPS, pero
+el clone del git-subdir **no** hace ese fallback. La URL HTTPS explícita instala sin depender de
+SSH. (Fue el bug que rompió la instalación de doc-arquitecto tras el #20.)
+
 Campos de `git-subdir` ([tabla oficial](https://code.claude.com/docs/en/plugin-marketplaces.md#git-subdirectories)):
 
 | Campo | Req. | Qué es |
 |---|---|---|
-| `url` | sí | URL del repo, shorthand `owner/repo`, o SSH |
+| `url` | sí | **URL HTTPS completa** (`https://github.com/owner/repo.git`). Evitá el shorthand `owner/repo`: en `git-subdir` el CLI lo resuelve a SSH y el `install` falla sin SSH configurado (ver ⚠️ arriba). |
 | `path` | sí | Subdirectorio dentro del repo donde vive el plugin (ej. `plugins/doc-arquitecto`) |
 | `ref` | no | Rama o tag; default = rama default del repo |
 | `sha` | no | Commit exacto de 40 chars para pinear una versión inmutable |
