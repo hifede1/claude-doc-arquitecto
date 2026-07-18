@@ -8,7 +8,7 @@
 | Capacidad | Entrada | Salida |
 |---|---|---|
 | **`/documentar` — modo nuevo** | Repo sin docs ni código relevante + contexto opcional | Entrevista guiada por etapas (propósito → alcance → decisiones estructurales con tradeoffs → plan de sesiones) y, recién con el plan confirmado, la estructura `docs/` completa: VISION, ALCANCE, PLAN con fichas 🎯🛠️✅📚⛓️, `decisiones/`, `references/`, `business/` |
-| **`/documentar` — modo existente** | Repo con docs y/o código | Inventario de lo que hay, detección de huecos contra el contrato, y su relleno con **diffs confirmados archivo por archivo**. Idempotente: sin huecos confirmados, cero bytes escritos |
+| **`/documentar` — modo existente** | Repo con docs y/o código | Inventario de lo que hay, detección de huecos contra el contrato, y su relleno con **diffs confirmados archivo por archivo**. Idempotente: sin huecos confirmados, cero bytes escritos ([ADR 005](decisiones/005-idempotencia-con-diffs-confirmados.md)) |
 | **`/auditar-docs`** | La documentación del proyecto | Informe de hallazgos con severidad (🔴🟠🟡⚪) y ubicación `file:línea` sobre **seis dimensiones**: completitud, contradicciones entre documentos, criterios no verificables, decisiones sin registrar, referencias faltantes o vencidas, drift interno doc↔doc. Ofrece los arreglos uno por uno con confirmación |
 | **Garantía transversal** | — | Guardia de Escritura Universal: ningún archivo existente se pisa sin un sí explícito, en cualquier modo |
 
@@ -29,5 +29,7 @@ su método de verificación, o el plan no se entrega.
 
 - **`docs/PLAN.md` no se generó.** Las cinco sesiones de construcción (S01–S05) están completas
   y verificadas a v1.0.0; un PLAN de sesiones cerradas sería registro histórico, no plano.
-  Decisión de Fede el 2026-07-18: se generará cuando haya trabajo real por delante (v1.1).
+  Decisión de Fede el 2026-07-18, registrada en
+  [ADR 011](decisiones/011-plan-md-diferido-a-v1-1.md) con su dueño y su desbloqueador:
+  se generará cuando haya trabajo real por delante (v1.1).
   El histórico de construcción vive en `docs/FICHA.md` §7.
