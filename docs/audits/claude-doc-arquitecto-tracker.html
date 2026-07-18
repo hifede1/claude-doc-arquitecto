@@ -11,13 +11,26 @@
      DATA/DEBT/EST/PLAN los confirmados, sumar su número a CLOSED_COUNT, recalcular estados de bloque,
      entrada fechada en CHANGELOG, actualizar TESTS/REFS si corresponde.
   3. Los IDs de pends son ESTABLES: jamás renombrarlos (los ticks del navegador dependen de ellos).
-  4. Validar el JS con node antes de CADA deploy. Redeploy a LA MISMA URL. Commit en rama + PR
-     (bookkeeping de cierres ya firmados: automergeable en modo orquestado).
+  4. ANTES DE CADA DEPLOY, los dos checks — si alguno falla, no se deploya:
+       node --check  (sintaxis del JS)
+       node scripts/verify-tracker.js  (anti-drift: índice↔archivos, triggers↔frontmatter,
+                                        y que el índice no haya vuelto a ser una copia)
+     Redeploy a LA MISMA URL. Commit en rama + PR (bookkeeping de cierres ya firmados:
+     automergeable en modo orquestado).
   5. Calibración vigente: unidad = sesiones (~2-4h) · 1 máquina (Fede + Claude) · metodología mixta
      con SDD (S04 = SDD ligero /sdd-ff; resto directo) · loop ORQUESTADO (/orquestar) con modo
      despacho activo (cola = GitHub Issues) · umbral de firma: NADA automergea, todo se firma.
-  6. La cola de trabajo vive en GitHub (hifede1/claude-doc-arquitecto, privado): issues #2–#5,
-     PRs = canal de firma (misma cuenta → firma = comentario «✅ validado»).
+  6. La cola de trabajo vive en GitHub (hifede1/claude-doc-arquitecto, PÚBLICO desde v1.0.0):
+     issues #2–#5 y #20 CERRADOS, cola VACÍA. PRs = canal de firma (misma cuenta → firma =
+     comentario «✅ validado»).
+  7. FUNCIÓN ACTUAL (desde 2026-07-19): con v1.0.0 entregada y 0 issues abiertos, este tracker
+     dejó de ser mapa de obra y es REGISTRO DE ESTADO + DEUDA. No inventes sesiones futuras:
+     si arranca v1.1, se planifica primero (ver ADR 011) y recién ahí vuelve el plan.
+  8. ⚠️ REGLA ANTI-DRIFT (decisión de Fede, 2026-07-19): el registro de decisiones NO se duplica
+     acá. `DECISIONS` es un ÍNDICE (id, título, estado, fecha, link) y la fuente de verdad son los
+     archivos docs/decisiones/NNN-*.md (ADR 004: markdown en el repo). Copiar el contenido de los
+     ADRs a este HTML fue la causa raíz de 13 hallazgos de la auditoría del 2026-07-19 —
+     NO LO VUELVAS A HACER. Al agregar una decisión: escribí el .md y sumá una línea al índice.
 -->
 <title>Tracker — doc-arquitecto</title>
 <style>
@@ -362,16 +375,16 @@
 <script>
 'use strict';
 /* ============ DATOS (editar SOLO esto en actualizaciones normales) ============ */
-const LAST_AUDIT = '2026-07-17';
-const CLOSED_COUNT = 11;
+const LAST_AUDIT = '2026-07-19';
+const CLOSED_COUNT = 15;
 const REPO = 'https://github.com/hifede1/claude-doc-arquitecto';
 
 const DATA = [
   { zona: 'Cimientos del plugin', bloques: [
     { id: 's01', nombre: 'S01 — Esqueleto', estado: 'hecho', issue: null,
-      plante: 'Repo + marketplace fede-tools + comandos instalables. Sin esqueleto no hay distribución: todo lo demás se monta acá.',
-      metodo: 'MODO MANTENIMIENTO: al tocar manifiestos, correr los 3 checks del CI en local; al renombrar comandos, recordar que los ticks e IDs de la caché instalada no se migran solos.',
-      resultados: ['Instalable desde el marketplace (verificado 2026-07-17: /plugin install funciona y los comandos aparecen namespaceados).'],
+      plante: 'Repo + comandos instalables. Sin esqueleto no hay distribución: todo lo demás se monta acá. TOPOLOGÍA ACTUAL (#20, ADR 010): este repo NO declara marketplace propio — el catálogo fede-tools vive SOLO en claude-audit-tracker y lista doc-arquitecto como fuente externa git-subdir con URL HTTPS completa.',
+      metodo: 'MODO MANTENIMIENTO: al tocar manifiestos, correr los 3 checks del CI en local; al renombrar comandos, recordar que los ticks e IDs de la caché instalada no se migran solos. NUNCA reintroducir .claude-plugin/marketplace.json (el gate anti-regresión del CI falla a propósito).',
+      resultados: ['Instalable desde el marketplace (re-verificado 2026-07-19: el catálogo de claude-audit-tracker lista doc-arquitecto con git-subdir + url HTTPS completa).'],
       refs: [{ t: 'claude-code-plugins.md (repo audit-tracker)', freshref: 'ref-plugins' }],
       pends: [] },
   ]},
@@ -384,62 +397,65 @@ const DATA = [
         'Cero decisiones inventadas ✅ (transcript: síntesis confirmadas + ADR pendiente con dueño).'],
       refs: [{ t: 'FICHA §3 y §6', freshref: 'ref-ficha' }],
       pends: [] },
-    { id: 's03', nombre: 'S03 — Modo existente (huecos + diffs)', estado: 'curso', issue: 3,
-      plante: 'IMPLEMENTADA y mergeada (PR #9, firmado por Fede): Fase 1-E completa + Guardia de Escritura Universal (archivo existente = diff confirmado en CUALQUIER modo) + tie-break de Fase 0 al modo seguro. 3 rondas de escéptico (2 refutaciones legítimas corregidas → SOBREVIVE). Falta la corrida real del criterio 2.',
-      metodo: 'Corrida de verificación: sembrar docs en un repo de prueba → correr /documentar (v0.3.0+, con caché actualizada y sesión reiniciada) → RECHAZAR un diff propuesto (acto humano: Fede) → verificar con git diff que el original quedó intacto → re-corrida sobre repo completo = git status limpio.',
-      resultados: ['Rechazo de un diff deja el original INTACTO (verificación: git diff tras rechazar = vacío).',
-        'No re-pregunta lo documentado (verificación: transcript).',
-        'Re-corrida sobre repo completo = cero escrituras (verificación: git status limpio).'],
+    { id: 's03', nombre: 'S03 — Modo existente (huecos + diffs)', estado: 'hecho', issue: 3,
+      plante: 'ENTREGADA en v1.0.0: Fase 1-E completa + Guardia de Escritura Universal (archivo existente = diff confirmado en CUALQUIER modo) + tie-break de Fase 0 al modo seguro. EJERCITADA EN REAL el 2026-07-19: corrida de /documentar en modo existente sobre este mismo repo — inventario, informe de huecos, verificación de procedencia y diffs confirmados por archivo; generó 13 archivos, cero escrituras antes del sí. CRITERIO 2 CLAVADO el 2026-07-19 con corrida protocolizada aparte: ejecutor CIEGO sobre repo sembrado + rechazo humano real.',
+      metodo: 'MODO MANTENIMIENTO. El protocolo de verificación del criterio 2, por si hay que repetirlo tras un cambio: sembrar un repo de prueba con docs que tengan centinelas únicos y defectos deliberados → tomar sha256 de cada archivo → correr /documentar con un ejecutor CIEGO (sin contexto de que se lo está midiendo) → verificar git status limpio en el punto de confirmación → RECHAZAR un diff sobre archivo existente y aprobar otro → veredicto por hashes con el script escrito ANTES de ver el resultado.',
+      resultados: ['Cero escrituras sin sí explícito ✅ (git status limpio en el punto de confirmación).',
+        'No re-pregunta lo documentado ✅ (la sustancia firmada se cita, no se re-litiga).',
+        'Rechazo de un diff deja el original INTACTO ✅ (PLAN.md byte-idéntico por sha256, descarte ENTERO: ninguno de los 3 cambios del diff se coló).'],
       refs: [{ t: 'FICHA §3 (modo existente)', freshref: 'ref-ficha' }],
-      pends: [
-        { id: 's03-corrida', txt: 'Corrida de verificación del criterio 2 (rechazo humano + git diff intacto + idempotencia)', est: 0.3 },
-      ] },
+      pends: [] },
   ]},
   { zona: '/auditar-docs', bloques: [
-    { id: 's04', nombre: 'S04 — Las seis dimensiones de auditoría', estado: 'curso', issue: 4,
-      plante: 'IMPLEMENTADA, en PR #10 (CI verde, conflicto de versión resuelto a 0.4.0) ESPERANDO FIRMA. La corrida CIEGA ya verificó el criterio 3: un ejecutor de contexto limpio detectó ambos defectos sembrados con file:línea exactos, sin saber que existían — y cazó además el drift inducido por el sembrado.',
-      metodo: 'Al firmar #10: merge → re-auditoría (criterio 3 a verde) → actualizar caché a v0.4.0 + reiniciar sesión. Deuda declarada: sub-criterio «arreglo rechazado NO se aplica» requiere rechazo humano (corrida con Fede, como S02/S03).',
-      resultados: ['Contradicción sembrada detectada y reportada con file:línea (verificación: repo de prueba con el defecto).',
-        'Criterio no verificable sembrado detectado (verificación: mismo repo).',
-        'Arreglo rechazado NO se aplica (verificación: rechazar uno y comprobar).'],
-      refs: [{ t: 'FICHA §3 (/auditar-docs)', freshref: 'ref-ficha' }, { t: '🔴 auditoria-de-docs.md — FALTANTE', freshref: 'ref-auditoria' }],
-      pends: [
-        { id: 's04-ref', txt: 'Generar docs/references/auditoria-de-docs.md (triggers + fecha)', est: 0.2 },
-        { id: 's04-sdd', txt: 'SDD ligero: fijar heurísticas por dimensión y formato del informe', est: 0.2 },
-        { id: 's04-dims', txt: 'Implementar las seis dimensiones + informe file:línea', est: 0.4 },
-        { id: 's04-fix', txt: 'Arreglos ofrecidos uno por uno con confirmación', est: 0.2 },
-      ] },
+    { id: 's04', nombre: 'S04 — Las seis dimensiones de auditoría', estado: 'hecho', issue: 4,
+      plante: 'ENTREGADA en v1.0.0 y EJERCITADA EN REAL el 2026-07-19 sobre el propio set de docs: 23 hallazgos (🔴5 🟠5 🟡13) con file:línea, las seis dimensiones reportadas. La corrida se hizo con DOS AUDITORES CIEGOS e independientes (dimensiones 1-3 y 4-6), sin contexto de quién escribió qué — y ambos encontraron, por separado, un error que el documentador había introducido horas antes (VISION.md decía «los seis» criterios cuando hay cinco). El diseño de «el documentador no corrige su propio examen» quedó validado en la práctica.',
+      metodo: 'MODO MANTENIMIENTO. PATRÓN OBLIGATORIO: si /auditar-docs corre sobre docs escritos en la MISMA sesión, delegá a subagentes ciegos — un auto-audit no ve lo que uno mismo escribió (lee lo que quiso escribir). Al tocar las heurísticas de las seis dimensiones, la referencia auditoria-de-docs.md es el contrato: se actualiza junto.',
+      resultados: ['Contradicción sembrada detectada y reportada con file:línea ✅ (corrida ciega, PR #10).',
+        'Criterio no verificable sembrado detectado ✅ (mismo repo de prueba).',
+        'Arreglo rechazado NO se aplica ✅ (verificado 2026-07-19: Fede rechazó los hallazgos 3.1/3.2 y 5.2 — los archivos quedaron intactos).',
+        'Re-verificación post-arreglo detecta drift inducido ✅ (2026-07-19: el fix del hallazgo 5.1 duplicó paths y la re-verificación lo cazó como adenda A.1).'],
+      refs: [{ t: 'FICHA §3 (/auditar-docs)', freshref: 'ref-ficha' }, { t: 'auditoria-de-docs.md', freshref: 'ref-auditoria' }],
+      pends: [] },
   ]},
   { zona: 'Integración y cierre', bloques: [
     { id: 's05', nombre: 'S05 — Pipeline e2e + publicación', estado: 'hecho', issue: 5,
       plante: 'HECHA. El e2e adversarial (workflow de 6 agentes) refutó el criterio 4 y encontró un gap REAL: /documentar no exponía triggers en el catálogo ni catalogaba business/ → audit-tracker no podía consumir sin adaptación. Arreglado en la fuente y re-verificado. PR #12 mergeado (S05 completa), release v1.0.0 mergeado (PR #14), repo PÚBLICO, tag v1.0.0. El plugin quedó COMPLETO.',
       metodo: 'MODO MANTENIMIENTO: el formato del catálogo de references/+business/ es el contrato con la pestaña Referencias del audit-tracker — no se toca sin re-verificar el criterio 4. Cualquier release futuro: bump de plugin.json + tag + CI verde sobre el HEAD real (lección: verificar el SHA, no confiar en un check stale).',
       resultados: ['/audit-tracker consume los docs generados sin adaptación manual ✅ (workflow adversarial: refutado → arreglado → re-verificado sinAdaptacionManual=true).',
-        'Cero decisiones inventadas ✅ (los 6 ADRs mapean a la FICHA firmada o son pendientes con dueño).',
-        'Instalación remota funciona desde GitHub ✅ (repo público; plugin.json responde HTTP 200 sin auth — el mecanismo de marketplace add).'],
+        'Cero decisiones inventadas ✅ (los ADRs de docs/decisiones/ mapean a la FICHA firmada o son pendientes con dueño).',
+        'Instalación remota funciona desde GitHub ✅ (re-verificado 2026-07-19: repo PÚBLICO y la entrada git-subdir del catálogo hermano apunta a la URL HTTPS completa).'],
       refs: [{ t: 'FICHA §6 (criterios 4 y 5)', freshref: 'ref-ficha' }],
       pends: [] },
   ]},
 ];
 
 const DEBT = [
-  'Repo privado: la instalación remota para terceros falla hasta S05 (decisión aceptada, no olvidada).',
+  '✅ <b>Criterio 2 — SALDADO el 2026-07-19</b>. Era el único criterio de la FICHA marcado ✅ sin evidencia directa. Se corrió el protocolo completo: repo sembrado, ejecutor ciego, rechazo humano real, veredicto por sha256 escrito ANTES de ver el resultado. Los 5 criterios de la FICHA quedan con evidencia.',
+  '🟠 <b>Tag v1.0.0 sin GitHub Release</b>: el tag existe local y remoto (e07a0a3) pero `gh release list` vuelve vacío. No bloquea la instalación (el marketplace lee del branch, no del release), pero no hay notas de versión ni notificación a quien siga el repo. Deuda aceptada por Fede el 2026-07-19.',
+  '🟡 <b>Ejemplo copiable roto en una referencia</b>: docs/references/marketplaces-plugins-claude-code.md:48 muestra `"url": "owner/repo"` en la celda de la tabla — la forma que el mismo documento prohíbe 26 líneas más abajo por resolverse a SSH y romper el install. Hallazgo 5.2 de la auditoría del 2026-07-19, rechazado en esa corrida.',
+  '🟠 <b>Dos decisiones operativas sin ADR</b>: la URL fija del artifact y el automerge de bookkeeping viven solo en el comentario de este archivo, y tensionan con ADR 004 (descartó «Artifact HTML» como fuente de verdad) y ADR 006 («umbral de firma: nada automergea»). O se registran como enmiendas, o se reconcilian.',
   'CI sin checks de contenido de los comandos (solo estructura) — deuda menor aceptada para un repo de prompts.',
 ];
 
 const PLAN = [
-  { id: 'ps03', titulo: 'S03 — Modo existente: huecos, diffs, idempotencia', issue: 3, badge: 'directo',
-    prereq: '#2 ✅ (contrato de formatos probado el 2026-07-17)', bloque: 's03', next: true,
+  { id: 'ps03', titulo: 'S03 — Modo existente: huecos, diffs, idempotencia', issue: 3, badge: 'directo · ✅ cerrada',
+    prereq: '#2 ✅ (contrato de formatos probado el 2026-07-17)', bloque: 's03',
     objetivo: 'Completar docs existentes sin pisar nada, con diff confirmado por archivo.' },
-  { id: 'ps04', titulo: 'S04 — /auditar-docs: seis dimensiones', issue: 4, badge: 'SDD ligero /sdd-ff',
+  { id: 'ps04', titulo: 'S04 — /auditar-docs: seis dimensiones', issue: 4, badge: 'SDD ligero · ✅ cerrada',
     prereq: '#2 (formato probado) · independiente de S03', bloque: 's04',
     objetivo: 'El auditor del plano: informe file:línea + arreglos confirmados.' },
-  { id: 'ps05', titulo: 'S05 — Integración, README y publicación', issue: 5, badge: 'directo',
+  { id: 'ps05', titulo: 'S05 — Integración, README y publicación', issue: 5, badge: 'directo · ✅ cerrada',
     prereq: '#3 y #4', bloque: 's05',
     objetivo: 'Pipeline e2e probado + repo público + v1.0.0.' },
 ];
 
+/* Plan de construcción COMPLETO al 2026-07-19: S01–S05 cerradas, cola de issues vacía.
+   Este bloque queda como histórico. Si arranca v1.1: planificar primero (ADR 011) y recién
+   entonces agregar sesiones con criterios VERIFICABLES — no antes. */
+
 const CHANGELOG = [
+  { fecha: '2026-07-19', txt: '🎯 CRITERIO C2 SALDADO — el último de la FICHA sin evidencia directa. Estaba marcado ✅ desde el 2026-07-17 sostenido por confianza, no por una corrida. Protocolo: repo de prueba sembrado («snapback», 4 docs con centinelas SENTINEL-* y defectos deliberados) → sha256 de cada archivo como línea base → ejecutor CIEGO corriendo /documentar (sin saber que se lo medía, sin contexto de esta auditoría) → verificado git status LIMPIO en el punto de confirmación → RECHAZO HUMANO real de un diff sobre archivo existente (PLAN.md) y aprobación de otro (references/README.md) → veredicto por script escrito ANTES de ver el resultado. 15 checks verdes: PLAN.md byte-idéntico, descarte ENTERO (los 3 cambios del diff quedaron afuera, incluida «la parte que seguro quería»), aprobación aplicada, nada más tocado, los 4 centinelas intactos. Los 5 criterios de la FICHA quedan con evidencia. Bonus: el ejecutor ciego encontró por su cuenta un gap real que nadie sembró (la VISION del repo de prueba promete 3 cosas y su PLAN persigue 1) y lo marcó como duda para el humano en vez de rellenarlo.' },
+  { fecha: '2026-07-19', txt: '🔄 RE-AUDITORÍA + CAMBIO DE FUNCIÓN DEL TRACKER. El ciclo completo del ecosistema se corrió de punta a punta sobre este repo: /documentar (modo existente) → /auditar-docs → /audit-tracker. (1) /documentar creó docs/VISION.md, docs/ALCANCE.md y docs/decisiones/ con 11 ADRs — que estaban RETENIDOS dentro del `DECISIONS` de este mismo HTML, el único material del proyecto que incumplía el ADR 004. (2) /auditar-docs, corrido con DOS AUDITORES CIEGOS, encontró 23 hallazgos: 13 eran este tracker congelado en 2026-07-17, y 2 eran errores que el documentador había introducido horas antes y que ningún auto-audit habría visto. (3) Esta re-auditoría: gates re-corridos (3 verdes), instalación re-verificada EN LA FUENTE (el catálogo hermano apunta a la URL HTTPS completa), S03 y S04 cerradas (CLOSED_COUNT 11→15), drift del #20 corregido (d01 ya no afirma marketplace propio), repo marcado PÚBLICO, REFS sincronizado con el catálogo canónico. CAMBIO ESTRUCTURAL: `DECISIONS` dejó de ser una copia y pasó a ser un ÍNDICE con link a docs/decisiones/ — el drift que causó 13 hallazgos ahora es imposible por construcción. Deudas nuevas registradas: criterio C2 sin verificación directa, tag v1.0.0 sin GitHub Release, y dos decisiones operativas sin ADR en tensión con las 004 y 006.' },
   { fecha: '2026-07-17', txt: '🎉 RELEASE v1.0.0 — plugin COMPLETO. PR #12 (S05) mergeado, release v1.0.0 (PR #14) mergeado, repo PÚBLICO, tag v1.0.0. Instalación remota verificada (HTTP 200). Decisión de publicación (d08) resuelta por Fede (público + v1.0.0). CLOSED_COUNT 9→11. Las 5 sesiones del plan hechas y verificadas. Gotcha del cierre: el PR #12 mergeó en a9db016 antes de que el bump a 1.0.0 propagara → el bump quedó varado y se llevó a main por PR #14 (cherry-pick); lección: verificar el SHA del CI, no confiar en un check stale.' },
   { fecha: '2026-07-17', txt: 'S05 implementada vía /proximo-encargo con verificación por workflow adversarial (6 agentes, 255k tokens). El e2e REFUTÓ el criterio 4: /documentar no exponía triggers en el catálogo de referencias ni catalogaba business/ → audit-tracker no podía consumir sin adaptación manual. Arreglado en la Fase 2 del comando (catálogo cubre references/ + business/ con todos los campos) y re-verificado. Criterio 4 y 5 clavados (CLOSED_COUNT 7→9). PR #12 con CI verde ESPERANDO FIRMA. Pendiente último: la publicación (repo público + v1.0.0), decisión de Fede. Hallazgo para Fede: contradicción de alcance sobre CI en los docs de prueba, cazada por /auditar-docs sola.' },
   { fecha: '2026-07-17', txt: 'S03 mergeada (PR #9 firmado por Fede) — sus 4 pends de implementación a verde (CLOSED_COUNT 3→7); queda s03-corrida (criterio 2, rechazo humano). S04 implementada vía /proximo-encargo: corrida CIEGA verificó el criterio 3 (ambos defectos sembrados detectados con file:línea); PR #10 con CI verde y conflicto de versión resuelto (0.4.0), ESPERANDO FIRMA. Gotcha registrado: otra sesión cambia la cuenta gh activa — switchear en la misma cadena que el push.' },
@@ -448,56 +464,53 @@ const CHANGELOG = [
   { fecha: '2026-07-17', txt: 'Auditoría inicial y tracker v1. S01 verde (verificado). S02 en PR #1 esperando firma. Repo privado creado en GitHub, cola de despacho publicada (issues #2–#5), calibración: sesiones · 1 máquina · mixto SDD · loop orquestado · todo se firma.' },
 ];
 
+/* ============ ÍNDICE DE DECISIONES ============
+   ⚠️ NO copiar acá el contenido de los ADRs. La fuente de verdad son los archivos
+   docs/decisiones/NNN-*.md (ADR 004: markdown en el repo). Duplicar el contenido en este
+   HTML fue la causa raíz de 13 hallazgos en la auditoría del 2026-07-19.
+   Al agregar una decisión: escribí el .md y sumá UNA línea acá. */
+const DECISIONS_DIR = REPO + '/blob/main/docs/decisiones/';
 const DECISIONS = [
-  { id: 'd01', fecha: '2026-07-17', titulo: 'Plugin separado del audit-tracker', estado: 'aceptada',
-    contexto: 'doc-arquitecto podía ser comandos dentro del audit-tracker o un skill suelto.',
-    opciones: 'Comandos dentro del audit-tracker (un solo plugin, pero mezcla plano y obra) · skill suelto (sin versionado ni marketplace) · plugin separado.',
-    decision: 'Plugin separado con marketplace propio fede-tools.',
-    porque: 'Documentar y auditar código son responsabilidades distintas con ritmos de versión distintos. Decidido por Fede (FICHA §4).',
-    consecuencias: 'Dos repos hermanos con el mismo patrón; se instalan juntos.', superaA: null },
-  { id: 'd02', fecha: '2026-07-17', titulo: 'La salida es el formato que consume audit-tracker', estado: 'aceptada',
-    contexto: 'Qué estructura generan los docs.',
-    opciones: 'Formato genérico (README + specs + ADRs sueltos) · el contrato del audit-tracker (fichas 🎯🛠️✅📚⛓️, references/ con triggers, business/).',
-    decision: 'El contrato del audit-tracker, extraído de su código real.',
-    porque: 'Pipeline sin traducción: la salida de uno es la entrada del otro. Decidido por Fede.',
-    consecuencias: 'Cambios de formato en audit-tracker impactan acá — territorio del criterio 4 (e2e).', superaA: null },
-  { id: 'd03', fecha: '2026-07-17', titulo: 'Entrevista guiada; la máquina no inventa lo estructural', estado: 'aceptada',
-    contexto: 'Cómo se generan los docs de un proyecto desde cero.',
-    opciones: 'Generación automática leyendo el código · entrevista guiada al humano.',
-    decision: 'Entrevista guiada; lo no decidido queda como pendiente explícita.',
-    porque: 'Docs inventados por la máquina son el problema, no la solución (regla heredada de /orquestar).',
-    consecuencias: 'La entrevista bloquea esperando al humano — a diferencia del audit-tracker, acá bloquear ES correcto.', superaA: null },
-  { id: 'd04', fecha: '2026-07-17', titulo: 'Markdown en el repo como fuente de verdad', estado: 'aceptada',
-    contexto: 'Dónde viven los docs generados.',
-    opciones: 'Artifact HTML · wiki externa · markdown en git.',
-    decision: 'Markdown en el repo.',
-    porque: 'Los docs viajan con el código y se versionan; el HTML vistoso ya lo pone el tracker.',
-    consecuencias: 'v1 no traduce desde Notion/Confluence (fuera de alcance).', superaA: null },
-  { id: 'd05', fecha: '2026-07-17', titulo: 'Idempotencia con diffs confirmados', estado: 'aceptada',
-    contexto: 'Qué pasa al re-correr /documentar.',
-    opciones: 'Regenerar desde cero · modo actualización con diffs confirmados.',
-    decision: 'Idempotente: re-correr = actualización, diff por archivo, jamás pisar sin confirmar.',
-    porque: 'Un documentador que pisa lo escrito destruye el contrato que debía cuidar.',
-    consecuencias: 'S03 entera existe para esto; criterio 2 lo clava.', superaA: null },
-  { id: 'd06', fecha: '2026-07-17', titulo: 'Calibración del loop: orquestado + mixto SDD', estado: 'aceptada',
-    contexto: 'Cómo se ejecuta el trabajo restante del propio plugin (calibración de esta auditoría).',
-    opciones: 'Loop a mano · despacho multi-máquina · orquestado con firma humana.',
-    decision: 'Orquestado (/orquestar) — activa despacho aunque haya una máquina. Metodología mixta: S04 = SDD ligero, resto directo. Umbral de firma: NADA automergea.',
-    porque: 'Fede quiere el loop autónomo quedándose solo en la validación; S04 es la única sesión con decisiones de diseño abiertas.',
-    consecuencias: 'La cola vive en GitHub (issues #2–#5); la firma es comentario «✅ validado» (misma cuenta).', superaA: null },
-  { id: 'd07', fecha: '2026-07-17', titulo: 'Repo privado hasta S05', estado: 'aceptada',
-    contexto: 'El modo orquestado necesitaba remote YA; publicar el plugin es parte de S05.',
-    opciones: 'Público ahora · privado ahora y público en S05 · diferir el remote (bloquea el loop).',
-    decision: 'Privado ahora; el pase a público es un pend de S05.',
-    porque: 'Habilita issues y PRs hoy sin publicar un plugin a medio construir. Decidido por Fede en la calibración.',
-    consecuencias: 'La instalación remota de terceros falla hasta S05 — listado como deuda visible.', superaA: null },
-  { id: 'd08', fecha: '2026-07-17', titulo: 'Publicación: repo público + tag v1.0.0', estado: 'aceptada',
-    contexto: 'La decisión de publicación pendiente: cuándo pasar el repo a público. Se desbloqueaba al llegar a S05 con el pipeline e2e verde.',
-    opciones: 'Público ahora + tag v1.0.0 · público sin tag (queda en 0.5.0) · seguir privado por ahora.',
-    decision: 'Público ahora + tag v1.0.0.',
-    porque: 'El e2e quedó verde (la condición que desbloqueaba la publicación) y las 5 sesiones verificadas. Decidido por Fede vía AskUserQuestion + «firmalo por mí».',
-    consecuencias: 'Instalación remota de terceros habilitada (verificada HTTP 200). El plugin queda en v1.0.0.',
-    superaA: 'Repo privado hasta S05 (el pase a público era un pend de S05; ahora ejecutado)' },
+  { id: 'adr-001', num: '001', titulo: 'Plugin separado del audit-tracker', estado: 'aceptada', fecha: '2026-07-17',
+    file: '001-plugin-separado-del-audit-tracker.md',
+    linea: 'Documentar y auditar código son responsabilidades distintas con ritmos de versión distintos.',
+    nota: '⚠️ Derogada parcialmente por la 010: la parte «con marketplace propio fede-tools» ya no rige.' },
+  { id: 'adr-002', num: '002', titulo: 'La salida es el formato que consume el audit-tracker', estado: 'aceptada', fecha: '2026-07-17',
+    file: '002-formato-de-salida-es-el-contrato-del-audit-tracker.md',
+    linea: 'Pipeline sin traducción: la salida de una herramienta es la entrada de la otra.', nota: null },
+  { id: 'adr-003', num: '003', titulo: 'Entrevista guiada: la máquina no inventa lo estructural', estado: 'aceptada', fecha: '2026-07-17',
+    file: '003-entrevista-guiada-lo-estructural-lo-decide-el-humano.md',
+    linea: 'Lo no decidido queda como pendiente explícita con dueño; docs inventados son el problema, no la solución.', nota: null },
+  { id: 'adr-004', num: '004', titulo: 'Markdown en el repo como fuente de verdad', estado: 'aceptada', fecha: '2026-07-17',
+    file: '004-markdown-en-el-repo-como-fuente-de-verdad.md',
+    linea: 'Los docs viajan con el código y se versionan; el HTML vistoso lo pone el tracker.',
+    nota: 'Es la decisión que este tracker incumplía al duplicar los ADRs. Corregido el 2026-07-19.' },
+  { id: 'adr-005', num: '005', titulo: 'Idempotencia con diffs confirmados', estado: 'aceptada', fecha: '2026-07-17',
+    file: '005-idempotencia-con-diffs-confirmados.md',
+    linea: 'Un documentador que pisa lo escrito destruye el contrato que debía cuidar.', nota: null },
+  { id: 'adr-006', num: '006', titulo: 'Calibración del loop: orquestado con metodología mixta', estado: 'aceptada', fecha: '2026-07-17',
+    file: '006-calibracion-del-loop-orquestado-sdd-mixto.md',
+    linea: 'Loop autónomo con el humano solo en la validación. Umbral de firma: nada automergea.',
+    nota: '⚠️ En tensión con el automerge de bookkeeping declarado en este archivo — sin enmienda registrada (deuda).' },
+  { id: 'adr-007', num: '007', titulo: 'Repo privado hasta S05', estado: 'superada', fecha: '2026-07-17',
+    file: '007-repo-privado-hasta-s05.md',
+    linea: 'Habilitó issues y PRs sin publicar un plugin a medio construir.',
+    nota: 'Superada por la 009 el 2026-07-17: el repo es PÚBLICO desde v1.0.0.' },
+  { id: 'adr-008', num: '008', titulo: 'Licencia MIT, open source, sin monetización', estado: 'aceptada', fecha: '2026-07-17',
+    file: '008-licencia-mit-open-source-sin-monetizacion.md',
+    linea: 'La más permisiva y estándar para tooling; cero fricción para colaboradores y terceros.', nota: null },
+  { id: 'adr-009', num: '009', titulo: 'Publicación: repo público + tag v1.0.0', estado: 'aceptada', fecha: '2026-07-17',
+    file: '009-publicacion-repo-publico-y-tag-v1-0-0.md',
+    linea: 'El e2e verde era la condición que desbloqueaba publicar. Supera a la 007.',
+    nota: 'Deuda abierta: el tag existe pero no hay GitHub Release publicado.' },
+  { id: 'adr-010', num: '010', titulo: 'Topología de catálogo único fede-tools', estado: 'aceptada', fecha: '2026-07-18',
+    file: '010-topologia-catalogo-unico-fede-tools.md',
+    linea: 'El catálogo vive SOLO en claude-audit-tracker; este repo se lista como fuente externa git-subdir.',
+    nota: 'Supera parcialmente a la 001. Regla de oro: ningún plugin nuevo crea su propio marketplace.' },
+  { id: 'adr-011', num: '011', titulo: 'docs/PLAN.md diferido a v1.1', estado: 'aceptada', fecha: '2026-07-18',
+    file: '011-plan-md-diferido-a-v1-1.md',
+    linea: 'Un PLAN de sesiones cerradas es histórico, no plano. Se escribe cuando arranque v1.1.',
+    nota: 'Pendiente derivada: dueño Fede · desbloquea = que exista trabajo real de v1.1.' },
 ];
 
 const DECISION_PENDS = [
@@ -506,36 +519,48 @@ const DECISION_PENDS = [
 
 const TESTS = {
   gates: [
-    { name: 'Manifiestos JSON válidos', cmd: 'node -e "JSON.parse(fs…marketplace.json / plugin.json)"', estado: 'verde', fecha: '2026-07-17 (local)' },
-    { name: 'Estructura del plugin (2 comandos)', cmd: 'test -f plugins/doc-arquitecto/commands/{documentar,auditar-docs}.md', estado: 'verde', fecha: '2026-07-17 (local)' },
-    { name: 'Consistencia marketplace↔plugin', cmd: 'node -e "…entry.description === plugin.description"', estado: 'verde', fecha: '2026-07-17 (local)' },
+    { name: 'Manifiesto del plugin válido', cmd: 'node -e "JSON.parse(fs.readFileSync(\'plugins/doc-arquitecto/.claude-plugin/plugin.json\'))"', estado: 'verde', fecha: '2026-07-19 (local + CI)' },
+    { name: 'Sin marketplace propio (anti-regresión #20)', cmd: 'test ! -e .claude-plugin/marketplace.json', estado: 'verde', fecha: '2026-07-19 (local + CI)' },
+    { name: 'Estructura del plugin (2 comandos)', cmd: 'test -f plugins/doc-arquitecto/commands/{documentar,auditar-docs}.md', estado: 'verde', fecha: '2026-07-19 (local + CI)' },
   ],
   flows: [
-    { f: 'Instalación: marketplace → caché → comando namespaceado aparece y ejecuta', pill: 'ambar', ev: 'Verificado A MANO hoy (corrida real en sesión); sin check automatizado' },
+    { f: 'Instalación: catálogo hermano → git-subdir HTTPS → comando namespaceado', pill: 'verde', ev: 'Re-verificado 2026-07-19 EN LA FUENTE: el marketplace.json de claude-audit-tracker lista doc-arquitecto con git-subdir + url HTTPS completa. El gate anti-regresión del CI protege el lado de este repo' },
     { f: '/documentar modo nuevo: detección → entrevista → docs/ generado', pill: 'verde', ev: 'Corrida real 2026-07-17 en repo vacío + escéptico independiente SOBREVIVE (informe en issue #2)' },
-    { f: '/documentar modo existente: huecos → diffs → idempotencia', pill: 'ambar', ev: 'Implementación mergeada (PR #9) y verificada por escéptico en 3 rondas; corrida real del criterio 2 pendiente (el rechazo es humano)' },
-    { f: '/auditar-docs sobre docs con defectos sembrados', pill: 'ambar', ev: 'Corrida CIEGA detectó ambos defectos con file:línea (informe en PR #10) — verde al mergear' },
-    { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'verde', ev: 'Verificado por workflow adversarial en S05 (criterio 4): refutado → gap de referencias arreglado en la fuente → re-verificado limpio. Mergeado (PR #12) + release v1.0.0' },
+    { f: '/documentar modo existente: huecos → diffs → rechazo respetado', pill: 'verde', ev: 'CLAVADO el 2026-07-19 por corrida protocolizada: ejecutor ciego + repo sembrado con centinelas + rechazo humano real. Veredicto por sha256 (script escrito antes de ver el resultado): rechazo respetado ENTERO, aprobación aplicada, cero escrituras previas, centinelas intactos. Pendiente menor: la re-corrida de idempotencia sobre repo completo (git status limpio)' },
+    { f: '/auditar-docs sobre docs con defectos', pill: 'verde', ev: 'Corrida ciega con defectos sembrados (PR #10) + corrida real 2026-07-19 sobre el propio set: 23 hallazgos con file:línea, incluidos 2 que ningún auto-audit habría visto' },
+    { f: 'Pipeline completo: documentar → auditar-docs → audit-tracker sin adaptación', pill: 'verde', ev: 'Workflow adversarial en S05 (criterio 4) + recorrido completo end-to-end el 2026-07-19: los tres comandos en secuencia sobre el mismo repo, sin adaptación manual' },
   ],
   crit: [
     { c: 'C1 — repo vacío → estructura completa, ≥1 criterio verificable por sesión', prot: 'Corrida protocolizada 2026-07-17 + escéptico (informe en issue #2)', estado: 'clavado' },
-    { c: 'C2 — docs existentes: nada se pisa sin confirmación', prot: 'Implementación mergeada y refutada 3 rondas; corrida con rechazo humano pendiente (pend s03-corrida)', estado: 'deuda' },
-    { c: 'C3 — contradicción y criterio no verificable sembrados: detectados con ubicación', prot: 'Corrida ciega 2026-07-17 (informe en PR #10) — verde al mergear', estado: 'deuda' },
-    { c: 'C4 — audit-tracker consume la salida sin adaptación', prot: 'Workflow adversarial S05 (6 agentes): refutó, se arregló el gap de referencias en la fuente, re-verificado sinAdaptacionManual=true (PR #12)', estado: 'clavado' },
-    { c: 'C5 — cero decisiones inventadas en la entrevista', prot: 'Transcript de la corrida del 2026-07-17 (issue #2); se re-confirma en S05', estado: 'clavado' },
+    { c: 'C2 — docs existentes: nada se pisa sin confirmación', prot: 'Corrida protocolizada 2026-07-19 con ejecutor CIEGO sobre repo sembrado («snapback», 4 docs con centinelas) + RECHAZO HUMANO real de un diff sobre archivo existente. Verificado por sha256: PLAN.md byte-idéntico tras el rechazo · descarte ENTERO (los 3 cambios del diff quedaron afuera, incluida «la parte que seguro quería») · el diff aprobado sí se aplicó · cero escrituras antes del sí · los 4 centinelas intactos', estado: 'clavado' },
+    { c: 'C3 — contradicción y criterio no verificable sembrados: detectados con ubicación', prot: 'Corrida ciega (PR #10, mergeado) + corrida real 2026-07-19 con 23 hallazgos ubicados', estado: 'clavado' },
+    { c: 'C4 — audit-tracker consume la salida sin adaptación', prot: 'Workflow adversarial S05 (6 agentes) + pipeline completo re-corrido el 2026-07-19', estado: 'clavado' },
+    { c: 'C5 — cero decisiones inventadas en la entrevista', prot: 'Transcript 2026-07-17 (issue #2) + corrida 2026-07-19: las 11 decisiones citan su fuente (FICHA §4, tracker, o issue #20); cero inventadas', estado: 'clavado' },
   ],
 };
 
+/* Sincronizado con docs/references/README.md (el catálogo canónico) el 2026-07-19.
+   Los `triggers` deben ser el conjunto COMPLETO del frontmatter de cada archivo: un
+   subconjunto hace que el ejecutor NO cargue la referencia por los triggers ausentes. */
 const REFS = [
   { id: 'ref-ficha', tema: 'FICHA de diseño — contrato de construcción', fecha: '2026-07-17', frescura: 'fresca',
-    path: 'docs/FICHA.md', linea: 'Propósito, funciones, decisiones firmadas, criterios y plan. Hace de docs/business/ de este repo.',
-    triggers: ['diseño', 'criterios', 'plan', 'alcance'], usa: 'Todas las sesiones' },
-  { id: 'ref-plugins', tema: 'Plugins y marketplaces de Claude Code', fecha: '2026-07-13', frescura: 'fresca',
-    path: 'claude-audit-tracker/docs/references/claude-code-plugins.md (repo hermano)', linea: 'Anatomía, instalación, caché y gotchas de distribución — verificada empíricamente.',
-    triggers: ['plugin', 'marketplace', 'instalación', 'namespace', 'caché'], usa: 'S01 (hecho) · issue #2 (paso de caché)' },
+    path: 'docs/FICHA.md', linea: 'Propósito, funciones, decisiones firmadas, criterios y plan de construcción. El contrato original, firmado por Fede.',
+    triggers: ['diseño', 'criterios', 'plan', 'alcance'], usa: 'Todas las sesiones · VISION.md y ALCANCE.md se destilan de acá' },
   { id: 'ref-auditoria', tema: 'Auditoría de documentación — heurísticas de las 6 dimensiones', fecha: '2026-07-17', frescura: 'fresca',
-    path: 'docs/references/auditoria-de-docs.md', linea: 'Heurísticas por dimensión, severidades y formato del informe de /auditar-docs. Generada en S04 (era la faltante 🔴 del catálogo).',
-    triggers: ['auditoría', 'contradicciones', 'criterios verificables', 'drift', 'severidad'], usa: 'S04 (hecha) — embebida en el comando auditar-docs' },
+    path: 'docs/references/auditoria-de-docs.md', linea: 'Heurísticas por dimensión, severidades y formato del informe de /auditar-docs.',
+    triggers: ['auditoría', 'auditar-docs', 'contradicciones', 'criterios verificables', 'completitud', 'drift', 'referencias vencidas', 'severidad'],
+    usa: 'S04 (hecha) — embebida en el comando auditar-docs' },
+  { id: 'ref-marketplaces', tema: 'Marketplaces y fuentes de plugins en Claude Code', fecha: '2026-07-18', frescura: 'fresca',
+    path: 'docs/references/marketplaces-plugins-claude-code.md', linea: 'Schema de `source`, el caso git-subdir de repo externo y la topología del catálogo único fede-tools. Incluye el gotcha empírico del shorthand→SSH.',
+    triggers: ['marketplace', 'plugin', 'source', 'git-subdir', 'github', 'catálogo', 'publicar', 'publicación', 'instalación', 'colisión', 'fede-tools', 'plugin.json', 'marketplace.json'],
+    usa: 'S01 (mantenimiento) · ADR 010 · #20 y futuros publicador/verificador/cartera' },
+  { id: 'ref-negocio', tema: 'Contexto de negocio de doc-arquitecto', fecha: '2026-07-17', frescura: 'fresca',
+    path: 'docs/business/contexto.md', linea: 'Quién y para qué, el ecosistema hermano con audit-tracker, el modelo (MIT sin monetización) y la gobernanza.',
+    triggers: ['negocio', 'ecosistema', 'audit-tracker', 'gobernanza', 'colaboradores'], usa: 'Marco de negocio — todas las funciones' },
+  { id: 'ref-plugins', tema: 'Plugins y marketplaces (referencia del repo hermano)', fecha: '2026-07-13', frescura: 'refrescar',
+    path: 'claude-audit-tracker/docs/references/claude-code-plugins.md (repo hermano)', linea: 'Anatomía, instalación, caché y gotchas de distribución. FECHADA ANTES del #20 (2026-07-18): no refleja la topología de catálogo único ni el gotcha shorthand→SSH.',
+    triggers: ['plugin', 'marketplace', 'instalación', 'namespace', 'caché'],
+    usa: 'S01 (histórico) — reemplazada de facto por ref-marketplaces en este repo. Refresco pendiente EN EL REPO HERMANO' },
 ];
 
 /* ============ LÓGICA DE RENDER (no tocar en actualizaciones normales) ============ */
@@ -624,10 +649,11 @@ function renderMapa() {
     { id: null, nm: 'FICHA firmada', d: 'contrato de diseño', arrow: 'S01 construye', who: 'auto' },
     { id: 's01', nm: 'S01 Esqueleto', d: 'instalable', arrow: 'PR #1 firmado y mergeado', who: 'humano' },
     { id: 's02', nm: 'S02 Modo nuevo', d: 'verificada (issue #2)', arrow: '/orquestar toma #3', who: 'auto' },
-    { id: 's03', nm: 'S03 Modo existente', d: 'mergeada · corrida pendiente', arrow: 'ejecutor tomó #4', who: 'auto' },
-    { id: 's04', nm: 'S04 /auditar-docs', d: 'PR #10 espera firma', arrow: 'firma de Fede', who: 'humano' },
-    { id: 's05', nm: 'S05 Cierre', d: 'e2e verde · PR #12', arrow: 'firma + decisión de publicación (d08)', who: 'humano' },
-    { id: null, nm: 'v1.0.0 🎉', d: 'plugin publicado · repo público', arrow: null },
+    { id: 's03', nm: 'S03 Modo existente', d: 'entregada · C2 sin verificar del todo', arrow: 'ejecutor tomó #4', who: 'auto' },
+    { id: 's04', nm: 'S04 /auditar-docs', d: 'entregada · ejercitada en real', arrow: 'firma de Fede', who: 'humano' },
+    { id: 's05', nm: 'S05 Cierre', d: 'e2e verde · PR #12 mergeado', arrow: 'firma + decisión de publicación (ADR 009)', who: 'humano' },
+    { id: null, nm: 'v1.0.0 🎉', d: 'plugin publicado · repo público · cola vacía', arrow: 'ciclo completo corrido 2026-07-19', who: 'auto' },
+    { id: null, nm: 'Contrato vivo', d: 'docs/decisiones/ = fuente de verdad · tracker = índice', arrow: null },
   ];
   $('#mapflow').innerHTML = nodes.map(n => {
     const b = n.id ? bloques.find(x => x.id === n.id) : null;
@@ -653,19 +679,23 @@ function renderDecisiones() {
       consecuencias: 'Derivada en vivo del pendiente «' + dp.pendId + '» — al cerrarse en re-auditoría, esta ficha desaparece sola.', superaA: null } : null;
   }).filter(Boolean);
   const all = DECISIONS.concat(derived).filter(d => dFilter === 'todas' || d.estado === dFilter);
-  $('#adrs').innerHTML = all.map(d => '<details class="adr"><summary>' +
-    '<span class="mono" style="font-size:11px;color:var(--muted)">' + d.id.toUpperCase() + '</span>' +
-    '<span class="cardtitle">' + d.titulo + '</span>' +
-    '<span class="pill ' + (d.estado === 'aceptada' ? 'hecho' : 'curso') + '">' + d.estado + '</span>' +
-    '<span style="font-size:12px;color:var(--muted)">' + d.fecha + '</span>' +
-    '</summary><div class="body">' +
-    '<p><b class="lab">Contexto</b>' + d.contexto + '</p>' +
-    (d.opciones ? '<p><b class="lab">Opciones evaluadas</b>' + d.opciones + '</p>' : '') +
-    (d.decision ? '<p><b class="lab">Decisión</b>' + d.decision + '</p>' : '') +
-    (d.porque ? '<p><b class="lab">Porqué</b>' + d.porque + '</p>' : '') +
-    (d.consecuencias ? '<p><b class="lab">Consecuencias</b>' + d.consecuencias + '</p>' : '') +
-    (d.superaA ? '<p><b class="lab">Supera a</b>' + d.superaA + '</p>' : '') +
-    '</div></details>').join('') || '<p class="lede">Sin decisiones en este filtro.</p>';
+  $('#adrs').innerHTML = all.map(d => {
+    const pill = d.estado === 'aceptada' ? 'hecho' : d.estado === 'superada' ? 'pendiente' : 'curso';
+    const link = d.file ? DECISIONS_DIR + d.file : null;
+    return '<details class="adr"><summary>' +
+      '<span class="mono" style="font-size:11px;color:var(--muted)">' + (d.num || d.id.toUpperCase()) + '</span>' +
+      '<span class="cardtitle">' + d.titulo + '</span>' +
+      '<span class="pill ' + pill + '">' + d.estado + '</span>' +
+      '<span style="font-size:12px;color:var(--muted)">' + d.fecha + '</span>' +
+      '</summary><div class="body">' +
+      '<p>' + (d.linea || d.contexto || '') + '</p>' +
+      (d.nota ? '<p><b class="lab">Nota</b>' + d.nota + '</p>' : '') +
+      (link
+        ? '<p><b class="lab">Ficha completa</b><a href="' + link + '">docs/decisiones/' + d.file + '</a> ' +
+          '<span style="color:var(--muted)">— contexto, opciones con tradeoffs, porqué y consecuencias viven ahí (fuente de verdad, ADR 004).</span></p>'
+        : '<p><b class="lab">Origen</b><span style="color:var(--muted)">Derivada en vivo de un pendiente del tablero — al cerrarse, esta ficha desaparece sola.</span></p>') +
+      '</div></details>';
+  }).join('') || '<p class="lede">Sin decisiones en este filtro.</p>';
 }
 
 function renderTests() {

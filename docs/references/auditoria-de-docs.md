@@ -34,7 +34,8 @@ contradicción (decisión humana) y completar un método de verificación (redac
 1. **Completitud** — ¿está el contrato entero? Estructura esperada presente (VISION,
    ALCANCE, PLAN, decisiones/, references/, business/ — o su equivalente declarado); cada
    sesión del PLAN con ≥1 criterio y CADA criterio con su `(verificación: …)`; fichas con
-   sus cinco secciones (🎯🛠️✅📚⛓️); ADRs con contexto/opciones/decisión/porqué/estado.
+   sus cinco secciones (🎯🛠️✅📚⛓️); ADRs con contexto/opciones con tradeoffs/decisión/porqué/consecuencias/estado y campo
+   `superaA` (sin `superaA` la cadena de derogaciones deja de ser auditable).
    Pieza ausente o sección vacía = hallazgo (severidad según tabla).
 2. **Contradicciones entre documentos** — afirmaciones incompatibles entre archivos.
    Método: cruzar las afirmaciones FACTUALES del set (alcances, dependencias, fechas,
