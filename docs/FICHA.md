@@ -21,7 +21,7 @@
 
 ## 2. Tipo y forma
 
-**Plugin de Claude Code** (`doc-arquitecto@fede-tools`), repo `hifede1/claude-doc-arquitecto`, misma estructura y marketplace que `claude-audit-tracker`. Herramienta **separada** del audit-tracker (no comandos dentro de él): documentar y auditar código son responsabilidades distintas con ritmos de versión distintos; se instalan juntas y se complementan.
+**Plugin de Claude Code** (`doc-arquitecto@fede-tools`), repo `hifede1/claude-doc-arquitecto`, misma estructura de plugin que `claude-audit-tracker` y listado como fuente externa (`git-subdir`) en el catálogo `fede-tools` del audit-tracker — doc-arquitecto ya no declara marketplace propio (#20). Herramienta **separada** del audit-tracker (no comandos dentro de él): documentar y auditar código son responsabilidades distintas con ritmos de versión distintos; se instalan juntas y se complementan.
 
 ## 3. Funciones
 
@@ -82,7 +82,7 @@ docs/
 
 ## 7. Plan de construcción
 
-1. **S01 — Esqueleto:** repo `claude-doc-arquitecto`, estructura de plugin + marketplace `fede-tools`, comandos vacíos instalables → verificable: `/plugin install` funciona y los comandos aparecen.
+1. **S01 — Esqueleto:** repo `claude-doc-arquitecto`, estructura de plugin (el marketplace `fede-tools` que S01 creó se consolidó luego en el catálogo del audit-tracker, #20), comandos vacíos instalables → verificable: `/plugin install` funciona y los comandos aparecen.
 2. **S02 — `/documentar` modo nuevo:** entrevista guiada + generación de la estructura completa → verificable: criterio 1.
 3. **S03 — `/documentar` modo existente:** lectura de docs/código previos, huecos, diffs confirmados, idempotencia → verificable: criterio 2.
 4. **S04 — `/auditar-docs`:** las seis dimensiones de auditoría + informe accionable + arreglos confirmados → verificable: criterio 3.

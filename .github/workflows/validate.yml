@@ -11,24 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Manifiestos JSON válidos
+      - name: Manifiesto del plugin válido
         run: |
-          node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8')); console.log('marketplace.json OK')"
           node -e "JSON.parse(require('fs').readFileSync('plugins/doc-arquitecto/.claude-plugin/plugin.json','utf8')); console.log('plugin.json OK')"
+
+      - name: Sin marketplace propio (anti-regresión #20)
+        run: |
+          if [ -e .claude-plugin/marketplace.json ]; then
+            echo "ERROR: .claude-plugin/marketplace.json no debe existir en este repo. El catálogo fede-tools vive SOLO en claude-audit-tracker (issue #20); reintroducirlo colisiona el nombre de marketplace en Claude Code."; exit 1
+          fi
+          echo "sin marketplace propio OK"
 
       - name: Estructura del plugin (2 comandos)
         run: |
           test -f plugins/doc-arquitecto/commands/documentar.md
           test -f plugins/doc-arquitecto/commands/auditar-docs.md
           echo "comandos OK"
-
-      - name: Consistencia marketplace↔plugin
-        run: |
-          node -e "
-            const m = JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8'));
-            const p = JSON.parse(require('fs').readFileSync('plugins/doc-arquitecto/.claude-plugin/plugin.json','utf8'));
-            const entry = m.plugins.find(x => x.name === 'doc-arquitecto');
-            if (!entry) throw new Error('doc-arquitecto ausente del marketplace');
-            if (entry.description !== p.description) throw new Error('descripción marketplace↔plugin difiere');
-            console.log('consistencia OK');
-          "

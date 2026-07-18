@@ -28,14 +28,14 @@ El documentador no corrige su propio examen: `/auditar-docs` es el revisor indep
 ## Instalación
 
 ```bash
-claude plugin marketplace add hifede1/claude-doc-arquitecto
+claude plugin marketplace add hifede1/claude-audit-tracker
 claude plugin install doc-arquitecto@fede-tools
 ```
 
 O desde dentro de Claude Code:
 
 ```
-/plugin marketplace add hifede1/claude-doc-arquitecto
+/plugin marketplace add hifede1/claude-audit-tracker
 /plugin install doc-arquitecto@fede-tools
 ```
 
