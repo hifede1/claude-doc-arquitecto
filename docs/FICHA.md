@@ -78,7 +78,7 @@ docs/
 - [x] `/documentar` en un proyecto con docs existentes **no pisa nada sin confirmación**: propone diffs y pregunta (verificación: correr sobre repo con docs sembrados y verificar que el contenido original sobrevive a un rechazo). ✅ **S03** (implementación + 3 rondas de escéptico) + demostrado en la corrida de modo existente sobre el propio repo (solo adiciones, nada pisado).
 - [x] `/auditar-docs` detecta y reporta con ubicación una **contradicción sembrada** entre dos documentos y un **criterio no verificable** sembrado (verificación: repo de prueba con ambos defectos plantados). ✅ **S04** — corrida ciega detectó ambos defectos con `file:línea` exactos.
 - [x] **Pipeline end-to-end:** sobre los docs generados, `/audit-tracker` corre y los consume **sin adaptación manual** (verificación: correr ambos en secuencia en el repo de prueba). ✅ **S05** — workflow adversarial: refutado (gap de referencias) → arreglado en la fuente → re-verificado sin adaptación.
-- [x] Las decisiones estructurales de la entrevista se le preguntan al humano **con opciones y tradeoffs** — cero decisiones de negocio inventadas (verificación: revisión del transcript de una corrida de `/documentar`). ✅ **S05** — los 6 ADRs mapean a la FICHA firmada o son pendientes con dueño; cero inventadas.
+- [x] Las decisiones estructurales de la entrevista se le preguntan al humano **con opciones y tradeoffs** — cero decisiones de negocio inventadas (verificación: revisión del transcript de una corrida de `/documentar`). ✅ **S05** — los ADRs de `docs/decisiones/` mapean a la FICHA firmada o son pendientes con dueño; cero inventadas.
 
 ## 7. Plan de construcción
 

@@ -33,7 +33,7 @@ la obra.
 ## Cómo se ve el éxito
 
 El éxito es observable y está clavado en los criterios de aceptación de `docs/FICHA.md` §6
-(los seis, todos ✅ verificados a v1.0.0). Los tres que definen la visión:
+(los cinco, todos ✅ verificados a v1.0.0). Los tres que definen la visión:
 
 1. `/documentar` en un repo sin docs produce la estructura completa y **cada sesión del plan
    tiene ≥1 criterio de aceptación verificable**.
