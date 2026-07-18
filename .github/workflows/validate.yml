@@ -27,3 +27,9 @@ jobs:
           test -f plugins/doc-arquitecto/commands/documentar.md
           test -f plugins/doc-arquitecto/commands/auditar-docs.md
           echo "comandos OK"
+
+      - name: Tracker sin drift (índice de decisiones ↔ docs/decisiones/)
+        run: |
+          node -e "const fs=require('fs');const m=fs.readFileSync('docs/audits/claude-doc-arquitecto-tracker.html','utf8').match(/<script>([\s\S]*)<\/script>/);if(!m){console.error('sin bloque script');process.exit(1)}fs.writeFileSync('/tmp/tracker.js',m[1])"
+          node --check /tmp/tracker.js
+          node scripts/verify-tracker.js
