@@ -11,8 +11,12 @@
      DATA/DEBT/EST/PLAN los confirmados, sumar su número a CLOSED_COUNT, recalcular estados de bloque,
      entrada fechada en CHANGELOG, actualizar TESTS/REFS si corresponde.
   3. Los IDs de pends son ESTABLES: jamás renombrarlos (los ticks del navegador dependen de ellos).
-  4. Validar el JS con node antes de CADA deploy. Redeploy a LA MISMA URL. Commit en rama + PR
-     (bookkeeping de cierres ya firmados: automergeable en modo orquestado).
+  4. ANTES DE CADA DEPLOY, los dos checks — si alguno falla, no se deploya:
+       node --check  (sintaxis del JS)
+       node scripts/verify-tracker.js  (anti-drift: índice↔archivos, triggers↔frontmatter,
+                                        y que el índice no haya vuelto a ser una copia)
+     Redeploy a LA MISMA URL. Commit en rama + PR (bookkeeping de cierres ya firmados:
+     automergeable en modo orquestado).
   5. Calibración vigente: unidad = sesiones (~2-4h) · 1 máquina (Fede + Claude) · metodología mixta
      con SDD (S04 = SDD ligero /sdd-ff; resto directo) · loop ORQUESTADO (/orquestar) con modo
      despacho activo (cola = GitHub Issues) · umbral de firma: NADA automergea, todo se firma.
