@@ -14,11 +14,15 @@
 # falsos verdes históricos: si alguna vuelve a pasar, hay una regresión.
 #
 # Al agregar un check nuevo a verify-tracker.js, agregá acá su mutación.
-cd /Users/federicopernice/Developer/tools/claude-doc-arquitecto || exit 1
+# Rutas relativas al propio script: el test tiene que correr igual en el runner
+# del CI que en la máquina de cualquiera. (La v1 traía un cd hardcodeado y el CI
+# lo cazó al primer push — un test que solo corre en una máquina no es un test.)
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT" || exit 1
 
 T=docs/audits/claude-doc-arquitecto-tracker.html
-BK=/Users/federicopernice/.claude/jobs/7a3bd43c/tmp/bat
-mkdir -p "$BK"
+BK="$(mktemp -d)"
+trap 'rm -rf "$BK"' EXIT
 cp "$T" "$BK/tracker.bak"
 cp docs/references/marketplaces-plugins-claude-code.md "$BK/mk.bak"
 cp docs/business/contexto.md "$BK/ctx.bak"
